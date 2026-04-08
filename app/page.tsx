@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   return (
@@ -30,21 +31,19 @@ export default function Home() {
         </div>
 
         <div className="w-full flex flex-col gap-3">
-          <Button
-            asChild
-            size="lg"
-            className="w-full bg-white text-[#1a1a1a] hover:bg-zinc-100 font-semibold h-14 text-base"
+          <Link
+            href="/apoiador"
+            className={cn(buttonVariants({ size: "lg" }), "w-full bg-white text-[#1a1a1a] hover:bg-zinc-100 font-semibold h-14 text-base justify-center")}
           >
-            <Link href="/apoiador">Quero ser Apoiador</Link>
-          </Button>
+            Quero ser Apoiador
+          </Link>
 
-          <Button
-            asChild
-            size="lg"
-            className="w-full bg-white text-[#1a1a1a] hover:bg-zinc-100 font-semibold h-14 text-base"
+          <Link
+            href="/admin"
+            className={cn(buttonVariants({ size: "lg" }), "w-full bg-white text-[#1a1a1a] hover:bg-zinc-100 font-semibold h-14 text-base justify-center")}
           >
-            <Link href="/admin">Painel Administrativo</Link>
-          </Button>
+            Painel Administrativo
+          </Link>
         </div>
 
       </div>
