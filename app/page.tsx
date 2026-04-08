@@ -52,15 +52,15 @@ const ENGAJAMENTO_OPTIONS = [
   },
   {
     value: "avaliando",
-    label: "Já conheço Pithon, estou avaliando se voto nele",
+    label: "Já conheço Pithon, estou avaliando se dou meu apoio a ele",
   },
   {
-    value: "voto",
-    label: "Estou com Pithon! Pode contar com meu voto",
+    value: "apoio",
+    label: "Estou com Pithon! Pode contar com meu apoio",
   },
   {
-    value: "voto_e_indica",
-    label: "Estou com Pithon! Pode contar com meu voto e quero ajudar indicando mais gente",
+    value: "apoio_e_indica",
+    label: "Estou com Pithon! Pode contar com meu apoio e quero ajudar indicando mais gente",
   },
 ];
 
@@ -154,6 +154,14 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a] flex items-center justify-center p-4">
       <div className="w-full max-w-[420px] flex flex-col gap-5">
+        <Image
+          src="/topo-imagem.png"
+          alt="Banner"
+          width={420}
+          height={200}
+          className="w-full object-cover rounded-xl"
+          priority
+        />
 
         {/* Header */}
         <div className="flex flex-col items-center gap-3 text-center">
