@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Apoiador {
+  id              String   @id @default(uuid())
+  nome            String
+  email           String   @unique
+  telefone        String?
+  dataNascimento  String?
+  endereco        String?
+  bairro          String?
+  cidade          String?
+  estado          String?
+  engajamento     String?
+  codigoIndicacao String   @unique
+  totalIndicacoes Int      @default(0)
+  createdAt       DateTime @default(now())
+  indicacoes      Indicacao[]
+  leads           Lead[]
+}
+
+model Lead {
+  id           String    @id @default(uuid())
+  nome         String
+  email        String    @unique
+  telefone     String?
+  origemCodigo String?
+  intencaoVoto String
+  createdAt    DateTime  @default(now())
+  indicadoPor  Apoiador? @relation(fields: [origemCodigo], references: [codigoIndicacao])
+  indicacao    Indicacao?
+}
+
+model Indicacao {
+  id         String   @id @default(uuid())
+  apoiadorId String
+  leadId     String   @unique
+  createdAt  DateTime @default(now())
+  apoiador   Apoiador @relation(fields: [apoiadorId], references: [id])
+  lead       Lead     @relation(fields: [leadId], references: [id])
+}
+
+model Admin {
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+}

@@ -1,44 +1,180 @@
-# Pithon — Cadastro de Apoiadores
+# Pithon — Plataforma de Campanha e Indicações
 
-Formulário mobile-first para cadastro de apoiadores da campanha Pithon.
+Sistema completo de captação de apoiadores e rastreamento de indicações para a campanha política do Pithon. Inclui formulário público, painel do apoiador e painel administrativo com analytics.
 
-## Ferramentas
+---
 
-- **[Next.js 16](https://nextjs.org/)** — framework React com App Router e Turbopack
-- **[React 19](https://react.dev/)** — biblioteca de interface
-- **[TypeScript](https://www.typescriptlang.org/)** — tipagem estática
-- **[Tailwind CSS](https://tailwindcss.com/)** — estilização utilitária
-- **[shadcn/ui](https://ui.shadcn.com/)** — componentes de UI (Input, Label, Button, Select, RadioGroup)
-- **[React Hook Form](https://react-hook-form.com/)** — gerenciamento de formulário
-- **[Zod](https://zod.dev/)** — validação de schema
-- **[@hookform/resolvers](https://github.com/react-hook-form/resolvers)** — integração Zod + React Hook Form
+## Stack
 
-## Como rodar
+| Camada | Tecnologia |
+|--------|-----------|
+| Framework | Next.js 16 (Turbopack, App Router) |
+| Linguagem | TypeScript |
+| Banco de dados | PostgreSQL via Prisma ORM 7 |
+| Autenticação | NextAuth v5 (JWT + Credentials) |
+| UI | Tailwind CSS 4 + shadcn/ui + Base UI |
+| Formulários | React Hook Form + Zod |
+| Gráficos | Recharts |
 
-```bash
-npm install
-npm run dev -- -p 3000
+---
+
+## Funcionalidades
+
+### Formulário público (`/`)
+- Cadastro com nome, e-mail, WhatsApp, data de nascimento, endereço completo e nível de engajamento
+- Captura automática de código de indicação via cookie (`?ref=`)
+- Cria **Lead** no banco e, para quem escolhe "apoio_e_indica", cria também um **Apoiador** com link único
+- Envia dados ao Google Sheets via webhook (opcional)
+- Exibe link de indicação personalizado após o envio
+
+### Painel do apoiador (`/dashboard/[codigo]`)
+- Acesso público via código único
+- Link de indicação com botão copiar
+- Contador de indicações realizadas
+- Tabela com leads indicados e intenção de voto de cada um
+
+### Painel administrativo (`/admin`)
+- Acesso protegido por login/senha
+- **Aba Apoiadores:** ranking por indicações, tabela com nome, e-mail, total e data
+- **Aba Intenção de Voto:** contagem de Sim / Não / Indecisos, gráfico de pizza, filtros por apoiador e data, exportação CSV
+
+---
+
+## Estrutura de pastas
+
+```
+pithon/
+├── app/
+│   ├── page.tsx                        # Formulário público
+│   ├── layout.tsx                      # Layout raiz
+│   ├── dashboard/[codigo]/page.tsx     # Painel do apoiador
+│   ├── admin/
+│   │   ├── layout.tsx                  # Layout pass-through
+│   │   ├── login/page.tsx              # Login admin
+│   │   └── (protected)/
+│   │       ├── layout.tsx              # Verificação de sessão
+│   │       └── page.tsx                # Dashboard admin
+│   └── api/
+│       ├── lead/route.ts               # POST: criar lead
+│       ├── apoiador/route.ts           # POST: criar apoiador
+│       ├── apoiador/[id]/route.ts      # GET: dados do apoiador
+│       ├── admin/stats/route.ts        # GET: stats agregados (protegido)
+│       ├── submit/route.ts             # POST: webhook Google Sheets
+│       └── auth/[...nextauth]/route.ts # Handlers NextAuth
+├── lib/
+│   ├── prisma.ts                       # Cliente Prisma (singleton + PrismaPg adapter)
+│   └── auth.ts                         # Configuração NextAuth
+├── components/ui/                      # Componentes shadcn/ui
+├── prisma/
+│   ├── schema.prisma                   # Modelos do banco
+│   └── seed.ts                         # Cria admin padrão
+├── proxy.ts                            # Middleware: tracking ?ref= e proteção /admin
+└── prisma.config.ts                    # Configuração Prisma v7
 ```
 
-Acesse: [http://localhost:3000](http://localhost:3000)
+---
+
+## Banco de dados
+
+```prisma
+Apoiador        # Quem apoia e indica
+  ├── codigoIndicacao (único, 8 chars)
+  └── totalIndicacoes
+
+Lead            # Quem se cadastrou via formulário
+  ├── intencaoVoto ("sim" | "nao" | "indeciso")
+  └── origemCodigo → Apoiador
+
+Indicacao       # Relação entre Apoiador e Lead
+Admin           # Usuários do painel administrativo
+```
+
+---
+
+## Variáveis de ambiente
+
+Configure o arquivo `.env.local`:
+
+```env
+# Banco de dados (Prisma / PostgreSQL)
+DATABASE_URL="postgres://..."
+
+# NextAuth — gere em https://generate-secret.vercel.app/32
+NEXTAUTH_SECRET="sua-chave-secreta"
+NEXTAUTH_URL="http://localhost:3000"
+
+# Google Sheets (opcional)
+GOOGLE_SHEETS_WEBHOOK_URL="https://script.google.com/..."
+```
+
+> O arquivo `.env` (raiz) deve conter apenas `DATABASE_URL` para uso do Prisma CLI.
+
+---
+
+## Instalação e execução
+
+```bash
+# Instalar dependências
+npm install
+
+# Rodar migrations e seed (cria tabelas + admin padrão)
+npx prisma migrate dev --name init
+npx prisma db seed
+
+# Servidor de desenvolvimento
+npm run dev
+```
+
+Acesse em [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Acesso admin
+
+| Campo | Valor padrão |
+|-------|-------------|
+| URL | `/admin/login` |
+| E-mail | `admin@pithon.com.br` |
+| Senha | `admin123` |
+
+> Altere a senha editando `prisma/seed.ts` e rodando `npx prisma db seed` novamente.
+
+---
+
+## Comandos úteis
+
+```bash
+npm run dev        # Dev server (Turbopack)
+npm run build      # Build de produção
+npm run lint       # ESLint
+
+npx prisma studio                        # Interface visual do banco
+npx prisma migrate dev --name <nome>     # Nova migration
+npx prisma db seed                       # Recriar admin padrão
+```
+
+---
+
+## Como funciona o sistema de indicações
+
+1. Apoiador se cadastra escolhendo **"apoio_e_indica"**
+2. Recebe um link único: `https://seudominio.com/?ref=ABC12345`
+3. Compartilha o link com outras pessoas
+4. Ao acessar o link, o código é salvo em cookie por 7 dias
+5. Ao preencher o formulário, o lead é vinculado automaticamente ao apoiador
+6. O contador `totalIndicacoes` do apoiador é incrementado
+7. Apoiador acompanha em tempo real em `/dashboard/ABC12345`
 
 ---
 
 ## Integração com Google Sheets
 
-Os dados do formulário são enviados automaticamente para uma planilha do Google via Apps Script.
+O sistema envia os dados do formulário para uma planilha do Google em paralelo ao banco de dados.
 
-### 1. Crie a planilha
+### Configurar Apps Script
 
-Acesse [sheets.google.com](https://sheets.google.com) e crie uma planilha em branco. Sugestão de nome: **Apoiadores Pithon**.
-
-### 2. Abra o Apps Script
-
-Na planilha, clique em **Extensões → Apps Script**.
-
-### 3. Cole o script
-
-Apague tudo que estiver no editor e cole o seguinte código:
+1. Acesse [sheets.google.com](https://sheets.google.com) e crie uma planilha
+2. Clique em **Extensões → Apps Script** e cole o código abaixo:
 
 ```javascript
 function doPost(e) {
@@ -53,18 +189,10 @@ function doPost(e) {
   }
 
   const data = JSON.parse(e.postData.contents);
-
   sheet.appendRow([
-    data.dataHora,
-    data.nome,
-    data.email,
-    data.whatsapp,
-    data.dataNascimento,
-    data.endereco,
-    data.bairro,
-    data.cidade,
-    data.estado,
-    data.engajamento,
+    data.dataHora, data.nome, data.email, data.whatsapp,
+    data.dataNascimento, data.endereco, data.bairro,
+    data.cidade, data.estado, data.engajamento,
   ]);
 
   return ContentService
@@ -73,30 +201,6 @@ function doPost(e) {
 }
 ```
 
-Clique em **Salvar** (ícone de disquete).
-
-### 4. Publique como Web App
-
-1. Clique em **Implantar → Nova implantação**
-2. Clique no ícone de engrenagem ao lado de "Tipo" e selecione **App da Web**
-3. Configure:
-   - **Executar como:** Eu (seu e-mail)
-   - **Quem pode acessar:** Qualquer pessoa
-4. Clique em **Implantar** e autorize o acesso quando solicitado
-5. **Copie a URL** gerada (começa com `https://script.google.com/macros/s/...`)
-
-### 5. Configure o ambiente
-
-Crie ou edite o arquivo `.env.local` na raiz do projeto:
-
-```env
-GOOGLE_SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/SEU_ID_AQUI/exec
-```
-
-### 6. Reinicie o servidor
-
-```bash
-npm run dev -- -p 3000
-```
-
-A partir daí, cada envio do formulário adiciona uma linha na planilha com todos os dados do apoiador.
+3. Clique em **Implantar → Nova implantação → App da Web**
+4. Defina acesso como **Qualquer pessoa** e copie a URL gerada
+5. Adicione no `.env.local`: `GOOGLE_SHEETS_WEBHOOK_URL=https://script.google.com/...`
