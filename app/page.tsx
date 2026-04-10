@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-[420px] flex flex-col items-center gap-8">
 
         <Image
@@ -33,14 +33,14 @@ export default function Home() {
         <div className="w-full flex flex-col gap-3">
           <Link
             href="/apoiador"
-            className={cn(buttonVariants({ size: "lg" }), "w-full bg-white text-[#1a1a1a] hover:bg-zinc-100 font-semibold h-14 text-base justify-center")}
+            className={cn(buttonVariants({ size: "lg" }), "w-full font-semibold h-14 text-base justify-center")}
           >
             Quero ser Apoiador
           </Link>
 
           <Link
             href="/admin"
-            className={cn(buttonVariants({ size: "lg" }), "w-full bg-white text-[#1a1a1a] hover:bg-zinc-100 font-semibold h-14 text-base justify-center")}
+            className={cn(buttonVariants({ size: "lg" }), "w-full font-semibold h-14 text-base justify-center")}
           >
             Painel Administrativo
           </Link>

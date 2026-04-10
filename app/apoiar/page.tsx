@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { VolumeX, Volume2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -44,8 +46,21 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
+const VIDEO_URL = "https://euk6y5si9i.ufs.sh/f/CpZyWbPiOXoNKdQ1IOsWUxVD1RCQngBokYcSH4htGAmM9bys";
+
 export default function ApoiarPage() {
+  const searchParams = useSearchParams();
   const [submitted, setSubmitted] = useState(false);
+  const [showVideo, setShowVideo] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      document.cookie = `ref_code=${ref}; path=/; max-age=86400; SameSite=Lax`;
+    }
+  }, [searchParams]);
   const [submittedName, setSubmittedName] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -91,7 +106,7 @@ export default function ApoiarPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-[420px] text-center gap-6 py-10 px-6">
           <div className="text-5xl">🎉</div>
           <div className="flex flex-col gap-2">
@@ -113,17 +128,53 @@ export default function ApoiarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      {showVideo && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setShowVideo(false)}
+        >
+          <div
+            className="flex flex-col items-center gap-4 my-10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-white text-xl font-bold tracking-wide">Receba este chamado</p>
+            <div className="relative">
+              <video
+                ref={videoRef}
+                src={VIDEO_URL}
+                muted={isMuted}
+                playsInline
+                onEnded={() => setShowVideo(false)}
+                className={`w-full md:max-h-[70vh] rounded-xl transition-all duration-300 ${isMuted ? "blur-sm" : ""}`}
+              />
+              {isMuted && (
+                <button
+                  onClick={() => {
+                    setIsMuted(false);
+                    if (videoRef.current) {
+                      videoRef.current.muted = false;
+                      videoRef.current.play();
+                    }
+                  }}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <span className="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-sm border border-white/20 text-white hover:bg-black/80 transition-colors">
+                    <VolumeX size={28} />
+                  </span>
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setShowVideo(false)}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white text-lg leading-none"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
       <div className="w-full max-w-[420px] flex flex-col gap-5">
-        <Image
-          src="/topo-imagem.png"
-          alt="Banner"
-          width={420}
-          height={200}
-          className="w-full h-auto object-cover rounded-xl"
-          priority
-        />
-
         <div className="flex flex-col items-center gap-3 text-center">
           <Image
             src="/pithon.jpg"
@@ -186,7 +237,7 @@ export default function ApoiarPage() {
                 type="submit"
                 size="lg"
                 disabled={isSubmitting}
-                className="w-full bg-[#1a1a1a] hover:bg-[#333] text-white font-semibold"
+                className="w-full font-semibold"
               >
                 {isSubmitting ? "Enviando..." : "Apoiar Pithon →"}
               </Button>
@@ -196,6 +247,14 @@ export default function ApoiarPage() {
             </CardFooter>
           </form>
         </Card>
+
+        <Image
+          src="/topo-imagem.png"
+          alt="Banner"
+          width={420}
+          height={200}
+          className="w-full h-auto object-cover rounded-xl"
+        />
       </div>
     </div>
   );

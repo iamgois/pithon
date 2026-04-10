@@ -194,11 +194,11 @@ export default function AdminPage() {
             </Card>
           </div>
 
-          {/* Top 10 Ranking */}
+          {/* Ranking */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Top 10 Apoiadores</CardTitle>
-              <CardDescription>Ordenados por número de indicações</CardDescription>
+              <CardTitle className="text-base">Ranking de Apoiadores</CardTitle>
+              <CardDescription>Quem mais trouxe indicações</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
@@ -210,49 +210,89 @@ export default function AdminPage() {
                   Nenhum apoiador cadastrado ainda.
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-8">#</TableHead>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead className="text-center">Indicações</TableHead>
-                      <TableHead>Link</TableHead>
-                      <TableHead>Cadastro</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {stats.topApoiadores.map((a, i) => (
-                      <TableRow key={a.id}>
-                        <TableCell className="text-muted-foreground font-mono text-sm">
+                <div className="divide-y divide-border">
+                  {stats.topApoiadores.map((a, i) => {
+                    const max = stats.topApoiadores[0]?.totalIndicacoes || 1;
+                    const pct = max > 0 ? (a.totalIndicacoes / max) * 100 : 0;
+                    const rankStyle =
+                      i === 0
+                        ? "text-white font-bold text-lg"
+                        : i === 1
+                        ? "text-zinc-300 font-semibold"
+                        : i === 2
+                        ? "text-zinc-400 font-semibold"
+                        : "text-muted-foreground";
+                    const rowBg =
+                      i === 0
+                        ? "bg-white/[0.06]"
+                        : i === 1
+                        ? "bg-white/[0.03]"
+                        : i === 2
+                        ? "bg-white/[0.015]"
+                        : "";
+                    const borderLeft =
+                      i === 0
+                        ? "border-l-2 border-l-zinc-300"
+                        : i === 1
+                        ? "border-l-2 border-l-zinc-500"
+                        : i === 2
+                        ? "border-l-2 border-l-zinc-600"
+                        : "border-l-2 border-l-transparent";
+                    return (
+                      <div
+                        key={a.id}
+                        className={`flex items-center gap-4 px-4 py-3.5 ${rowBg} ${borderLeft}`}
+                      >
+                        <span className={`w-7 shrink-0 text-center font-mono ${rankStyle}`}>
                           {i + 1}
-                        </TableCell>
-                        <TableCell className="font-medium">{a.nome}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {a.email}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant={a.totalIndicacoes > 0 ? "default" : "secondary"}>
-                            {a.totalIndicacoes}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <a
-                            href={`/dashboard/${a.codigoIndicacao}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:underline font-mono"
-                          >
-                            {a.codigoIndicacao}
-                          </a>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {new Date(a.createdAt).toLocaleDateString("pt-BR")}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-1.5">
+                            <div className="min-w-0">
+                              <span className={`font-medium truncate block ${i === 0 ? "text-white" : ""}`}>
+                                {a.nome}
+                              </span>
+                              <span className="text-muted-foreground text-xs truncate block">
+                                {a.email}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Badge
+                                variant={a.totalIndicacoes > 0 ? "default" : "secondary"}
+                                className={i === 0 ? "bg-white text-black font-bold" : ""}
+                              >
+                                {a.totalIndicacoes}{" "}
+                                {a.totalIndicacoes === 1 ? "indicação" : "indicações"}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="h-1 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${
+                                i === 0
+                                  ? "bg-white"
+                                  : i === 1
+                                  ? "bg-zinc-400"
+                                  : i === 2
+                                  ? "bg-zinc-500"
+                                  : "bg-zinc-600"
+                              }`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                        <a
+                          href={`/dashboard/${a.codigoIndicacao}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-zinc-500 hover:text-zinc-300 font-mono shrink-0 hidden sm:block"
+                        >
+                          {a.codigoIndicacao}
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </CardContent>
           </Card>

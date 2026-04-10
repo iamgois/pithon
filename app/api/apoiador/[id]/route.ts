@@ -34,7 +34,7 @@ export async function GET(
     }
 
     const baseUrl = req.headers.get("origin") || process.env.NEXTAUTH_URL || "";
-    const link = `${baseUrl}/?ref=${apoiador.codigoIndicacao}`;
+    const link = `${baseUrl}/apoiar?ref=${apoiador.codigoIndicacao}`;
 
     return NextResponse.json({ apoiador, link });
   } catch (error) {
