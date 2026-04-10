@@ -318,13 +318,15 @@ export default function Home() {
                   </span>
                 </button>
               )}
+
+              {/* Botão fechar sobreposto ao vídeo */}
+              <button
+                onClick={() => setShowVideo(false)}
+                className="absolute top-2 right-2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-base shadow-[0_4px_14px_rgba(234,179,8,0.6)] hover:shadow-[0_6px_20px_rgba(234,179,8,0.8)] transition-all duration-200"
+              >
+                ✕
+              </button>
             </div>
-            <button
-              onClick={() => setShowVideo(false)}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white text-lg leading-none"
-            >
-              ✕
-            </button>
           </div>
         </div>
       )}
