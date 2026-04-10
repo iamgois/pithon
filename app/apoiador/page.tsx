@@ -72,7 +72,7 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-const VIDEO_URL = "https://euk6y5si9i.ufs.sh/f/CpZyWbPiOXoNKdQ1IOsWUxVD1RCQngBokYcSH4htGAmM9bys";
+const VIDEO_URL = "https://euk6y5si9i.ufs.sh/f/CpZyWbPiOXoNUJP0fCmgLZXSxvo8h2MHPnRrWBCzqeJ6mul1";
 
 export default function Home() {
   const [submitted, setSubmitted] = useState(false);
