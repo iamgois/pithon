@@ -359,7 +359,7 @@ export default function Home() {
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-white text-xl font-bold tracking-wide">Assista o Vídeo</p>
-            <div className="relative h-[60vh] aspect-[9/16]">
+            <div className="relative h-[80vh] aspect-[9/16]">
               {/* YouTube iframe — formato Shorts 9:16 */}
               <div
                 id="yt-player"
