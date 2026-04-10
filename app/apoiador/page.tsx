@@ -17,41 +17,49 @@ import {
   CardDescription,
   CardFooter,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const schema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  email: z.string().email("E-mail inválido"),
   whatsapp: z.string().min(10, "WhatsApp inválido"),
-  dataNascimento: z.string().min(1, "Data de nascimento obrigatória"),
-  endereco: z.string().min(5, "Endereço obrigatório"),
-  bairro: z.string().min(2, "Bairro obrigatório"),
   cidade: z.string().min(2, "Cidade obrigatória"),
-  estado: z.string().min(2, "Estado obrigatório"),
-  engajamento: z.string().min(1, "Selecione seu nível de engajamento"),
+  bairro: z.string().min(2, "Bairro obrigatório"),
+  profissao: z.string().optional(),
+  dataNascimento: z.string().min(1, "Data de nascimento obrigatória"),
+  nivelApoio: z.string().min(1, "Selecione seu nível de apoio"),
+  canalComunicacao: z.string().min(1, "Selecione o canal preferido"),
 });
 
 type FormData = z.infer<typeof schema>;
 
-const ESTADOS = [
-  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA",
-  "MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN",
-  "RS","RO","RR","SC","SP","SE","TO",
+const ASSUNTOS = ["Segurança", "Saúde", "Educação", "Transporte", "Emprego", "Outros"];
+const HOBBIES = ["Academia", "Tiro Esportivo", "Motociclismo", "Bike", "Futebol", "Outros"];
+
+const NIVEL_APOIO = [
+  {
+    value: "simpatizante",
+    label: "Quero conhecer mais",
+    titulo: "Simpatizante",
+    color: "border-blue-500 bg-blue-500/10",
+    dot: "bg-blue-500",
+  },
+  {
+    value: "recruta",
+    label: "Conte com meu apoio",
+    titulo: "Recruta",
+    color: "border-orange-500 bg-orange-500/10",
+    dot: "bg-orange-500",
+  },
+  {
+    value: "operador_especial",
+    label: "Conte com meu apoio + quero ajudar",
+    titulo: "Operador Especial",
+    color: "border-red-500 bg-red-500/10",
+    dot: "bg-red-500",
+  },
 ];
 
-const ENGAJAMENTO_OPTIONS = [
-  { value: "conhecer",      label: "Quero conhecer mais informações" },
-  { value: "avaliando",     label: "Já conheço Pithon, estou avaliando se dou meu apoio a ele" },
-  { value: "apoio",         label: "Estou com Pithon! Pode contar com meu apoio" },
-  { value: "apoio_e_indica",label: "Estou com Pithon! Pode contar com meu apoio e quero ajudar indicando mais gente" },
-];
+const CANAIS = ["Instagram", "WhatsApp", "Ligação", "Outros"];
 
 function formatWhatsApp(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -72,6 +80,30 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
+function ToggleChip({
+  label,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`px-3 py-1.5 rounded-full text-sm border transition-colors cursor-pointer ${
+        selected
+          ? "border-primary bg-primary/15 text-foreground"
+          : "border-zinc-700 text-muted-foreground hover:border-zinc-500"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 const VIDEO_URL = "https://euk6y5si9i.ufs.sh/f/CpZyWbPiOXoNUJP0fCmgLZXSxvo8h2MHPnRrWBCzqeJ6mul1";
 
 export default function Home() {
@@ -83,6 +115,8 @@ export default function Home() {
   const [referralLink, setReferralLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [assuntos, setAssuntos] = useState<string[]>([]);
+  const [hobbies, setHobbies] = useState<string[]>([]);
 
   const {
     register,
@@ -94,10 +128,19 @@ export default function Home() {
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const whatsappValue = watch("whatsapp", "");
-  const engajamentoValue = watch("engajamento", "");
+  const nivelApoioValue = watch("nivelApoio", "");
+  const canalValue = watch("canalComunicacao", "");
 
   function handleWhatsAppChange(e: React.ChangeEvent<HTMLInputElement>) {
     setValue("whatsapp", formatWhatsApp(e.target.value), { shouldValidate: true });
+  }
+
+  function toggleAssunto(a: string) {
+    setAssuntos((prev) => prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]);
+  }
+
+  function toggleHobby(h: string) {
+    setHobbies((prev) => prev.includes(h) ? prev.filter((x) => x !== h) : [...prev, h]);
   }
 
   async function onSubmit(data: FormData) {
@@ -108,20 +151,21 @@ export default function Home() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         nome: data.nome,
-        email: data.email,
         telefone: data.whatsapp,
         dataNascimento: data.dataNascimento,
-        endereco: data.endereco,
-        bairro: data.bairro,
         cidade: data.cidade,
-        estado: data.estado,
-        engajamento: data.engajamento,
+        bairro: data.bairro,
+        profissao: data.profissao || null,
+        assuntosInteresse: assuntos.length > 0 ? assuntos.join(", ") : null,
+        hobbies: hobbies.length > 0 ? hobbies.join(", ") : null,
+        nivelApoio: data.nivelApoio,
+        canalComunicacao: data.canalComunicacao,
       }),
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      setSubmitError(res.status === 409 ? "Este e-mail já está cadastrado." : (err.error || "Erro ao enviar. Tente novamente."));
+      setSubmitError(err.error || "Erro ao enviar. Tente novamente.");
       return;
     }
 
@@ -130,6 +174,8 @@ export default function Home() {
     setReferralLink(link);
     setSubmitted(true);
     reset();
+    setAssuntos([]);
+    setHobbies([]);
   }
 
   async function handleCopyLink() {
@@ -234,6 +280,7 @@ export default function Home() {
           </div>
         </div>
       )}
+
       <div className="w-full max-w-[420px] flex flex-col gap-5">
         <div className="flex flex-col items-center gap-3 text-center">
           <Image
@@ -264,7 +311,7 @@ export default function Home() {
           </CardHeader>
 
           <form onSubmit={handleSubmit(onSubmit)}>
-            <CardContent className="flex flex-col gap-4 pt-5">
+            <CardContent className="flex flex-col gap-5 pt-5">
 
               {submitError && (
                 <div className="rounded-md bg-destructive/10 border border-destructive/30 px-3 py-2 text-sm text-destructive">
@@ -274,10 +321,6 @@ export default function Home() {
 
               <Field label="Nome completo *" error={errors.nome?.message}>
                 <Input placeholder="Seu nome completo" {...register("nome")} aria-invalid={!!errors.nome} />
-              </Field>
-
-              <Field label="E-mail *" error={errors.email?.message}>
-                <Input type="email" placeholder="seu@email.com" {...register("email")} aria-invalid={!!errors.email} />
               </Field>
 
               <Field label="WhatsApp *" error={errors.whatsapp?.message}>
@@ -290,61 +333,97 @@ export default function Home() {
                 />
               </Field>
 
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Cidade *" error={errors.cidade?.message}>
+                  <Input placeholder="Sua cidade" {...register("cidade")} aria-invalid={!!errors.cidade} />
+                </Field>
+                <Field label="Bairro *" error={errors.bairro?.message}>
+                  <Input placeholder="Seu bairro" {...register("bairro")} aria-invalid={!!errors.bairro} />
+                </Field>
+              </div>
+
+              <Field label="Profissão (opcional)">
+                <Input placeholder="Ex: Policial, Professor, Comerciante..." {...register("profissao")} />
+              </Field>
+
               <Field label="Data de nascimento *" error={errors.dataNascimento?.message}>
                 <Input type="date" {...register("dataNascimento")} aria-invalid={!!errors.dataNascimento} />
               </Field>
 
-              <Field label="Endereço *" error={errors.endereco?.message}>
-                <Input placeholder="Rua, número, complemento" {...register("endereco")} aria-invalid={!!errors.endereco} />
-              </Field>
-
-              <Field label="Bairro *" error={errors.bairro?.message}>
-                <Input placeholder="Seu bairro" {...register("bairro")} aria-invalid={!!errors.bairro} />
-              </Field>
-
-              <div className="grid grid-cols-[1fr_auto] gap-3">
-                <Field label="Cidade *" error={errors.cidade?.message}>
-                  <Input placeholder="Sua cidade" {...register("cidade")} aria-invalid={!!errors.cidade} />
-                </Field>
-
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Estado *</Label>
-                  <Select onValueChange={(val: string | null) => setValue("estado", val ?? "", { shouldValidate: true })}>
-                    <SelectTrigger className="w-[72px]" aria-invalid={!!errors.estado}>
-                      <SelectValue placeholder="UF" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ESTADOS.map((uf) => (
-                        <SelectItem key={uf} value={uf}>{uf}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.estado && <p className="text-xs text-destructive">{errors.estado.message}</p>}
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Assuntos de interesse
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {ASSUNTOS.map((a) => (
+                    <ToggleChip key={a} label={a} selected={assuntos.includes(a)} onToggle={() => toggleAssunto(a)} />
+                  ))}
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
                 <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Nível de engajamento *
+                  Hobby
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {HOBBIES.map((h) => (
+                    <ToggleChip key={h} label={h} selected={hobbies.includes(h)} onToggle={() => toggleHobby(h)} />
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Nível de apoio *
                 </Label>
                 <RadioGroup
-                  value={engajamentoValue}
-                  onValueChange={(val: string | null) => setValue("engajamento", val ?? "", { shouldValidate: true })}
+                  value={nivelApoioValue}
+                  onValueChange={(val: string | null) => setValue("nivelApoio", val ?? "", { shouldValidate: true })}
                   className="gap-2"
                 >
-                  {ENGAJAMENTO_OPTIONS.map((opt) => (
+                  {NIVEL_APOIO.map((opt) => (
                     <label
                       key={opt.value}
-                      className={`flex items-start gap-3 rounded-lg border-2 p-3 cursor-pointer transition-colors ${
-                        engajamentoValue === opt.value ? "border-primary bg-primary/10" : "border-border hover:border-muted-foreground"
+                      className={`flex items-center gap-3 rounded-lg border-2 p-3 cursor-pointer transition-colors ${
+                        nivelApoioValue === opt.value ? opt.color : "border-border hover:border-zinc-600"
                       }`}
                     >
-                      <RadioGroupItem value={opt.value} className="mt-0.5 shrink-0" />
-                      <span className="text-sm leading-snug text-foreground">{opt.label}</span>
+                      <RadioGroupItem value={opt.value} className="shrink-0" />
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${opt.dot}`} />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold leading-none">{opt.titulo}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{opt.label}</p>
+                        </div>
+                      </div>
                     </label>
                   ))}
                 </RadioGroup>
-                {errors.engajamento && <p className="text-xs text-destructive">{errors.engajamento.message}</p>}
+                {errors.nivelApoio && <p className="text-xs text-destructive">{errors.nivelApoio.message}</p>}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Melhor canal para falarmos com você *
+                </Label>
+                <RadioGroup
+                  value={canalValue}
+                  onValueChange={(val: string | null) => setValue("canalComunicacao", val ?? "", { shouldValidate: true })}
+                  className="grid grid-cols-2 gap-2"
+                >
+                  {CANAIS.map((canal) => (
+                    <label
+                      key={canal}
+                      className={`flex items-center gap-2 rounded-lg border-2 px-3 py-2.5 cursor-pointer transition-colors ${
+                        canalValue === canal ? "border-primary bg-primary/10" : "border-border hover:border-zinc-600"
+                      }`}
+                    >
+                      <RadioGroupItem value={canal} className="shrink-0" />
+                      <span className="text-sm">{canal}</span>
+                    </label>
+                  ))}
+                </RadioGroup>
+                {errors.canalComunicacao && <p className="text-xs text-destructive">{errors.canalComunicacao.message}</p>}
               </div>
 
             </CardContent>

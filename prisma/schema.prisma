@@ -8,21 +8,23 @@ datasource db {
 }
 
 model Apoiador {
-  id              String   @id @default(uuid())
-  nome            String
-  email           String   @unique
-  telefone        String?
-  dataNascimento  String?
-  endereco        String?
-  bairro          String?
-  cidade          String?
-  estado          String?
-  engajamento     String?
-  codigoIndicacao String   @unique
-  totalIndicacoes Int      @default(0)
-  createdAt       DateTime @default(now())
-  indicacoes      Indicacao[]
-  leads           Lead[]
+  id                String   @id @default(uuid())
+  nome              String
+  email             String?  @unique
+  telefone          String?
+  dataNascimento    String?
+  cidade            String?
+  bairro            String?
+  profissao         String?
+  assuntosInteresse String?
+  hobbies           String?
+  nivelApoio        String?
+  canalComunicacao  String?
+  codigoIndicacao   String   @unique
+  totalIndicacoes   Int      @default(0)
+  createdAt         DateTime @default(now())
+  indicacoes        Indicacao[]
+  leads             Lead[]
 }
 
 model Lead {
