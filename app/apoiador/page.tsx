@@ -117,6 +117,8 @@ export default function Home() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [assuntos, setAssuntos] = useState<string[]>([]);
   const [hobbies, setHobbies] = useState<string[]>([]);
+  const [hobbyOutro, setHobbyOutro] = useState("");
+  const [canalDetalhe, setCanalDetalhe] = useState("");
 
   const {
     register,
@@ -157,9 +159,13 @@ export default function Home() {
         bairro: data.bairro,
         profissao: data.profissao || null,
         assuntosInteresse: assuntos.length > 0 ? assuntos.join(", ") : null,
-        hobbies: hobbies.length > 0 ? hobbies.join(", ") : null,
+        hobbies: hobbies.length > 0
+          ? hobbies.map((h) => h === "Outros" && hobbyOutro ? `Outros (${hobbyOutro})` : h).join(", ")
+          : null,
         nivelApoio: data.nivelApoio,
-        canalComunicacao: data.canalComunicacao,
+        canalComunicacao: canalDetalhe
+          ? `${data.canalComunicacao} (${canalDetalhe})`
+          : data.canalComunicacao,
       }),
     });
 
@@ -176,6 +182,8 @@ export default function Home() {
     reset();
     setAssuntos([]);
     setHobbies([]);
+    setHobbyOutro("");
+    setCanalDetalhe("");
   }
 
   async function handleCopyLink() {
@@ -370,6 +378,14 @@ export default function Home() {
                     <ToggleChip key={h} label={h} selected={hobbies.includes(h)} onToggle={() => toggleHobby(h)} />
                   ))}
                 </div>
+                {hobbies.includes("Outros") && (
+                  <Input
+                    placeholder="Qual seu hobby?"
+                    value={hobbyOutro}
+                    onChange={(e) => setHobbyOutro(e.target.value)}
+                    className="mt-1"
+                  />
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -408,7 +424,7 @@ export default function Home() {
                 </Label>
                 <RadioGroup
                   value={canalValue}
-                  onValueChange={(val: string | null) => setValue("canalComunicacao", val ?? "", { shouldValidate: true })}
+                  onValueChange={(val: string | null) => { setValue("canalComunicacao", val ?? "", { shouldValidate: true }); setCanalDetalhe(""); }}
                   className="grid grid-cols-2 gap-2"
                 >
                   {CANAIS.map((canal) => (
@@ -424,6 +440,28 @@ export default function Home() {
                   ))}
                 </RadioGroup>
                 {errors.canalComunicacao && <p className="text-xs text-destructive">{errors.canalComunicacao.message}</p>}
+                {canalValue === "Instagram" && (
+                  <Input
+                    placeholder="Seu @ do Instagram"
+                    value={canalDetalhe}
+                    onChange={(e) => setCanalDetalhe(e.target.value)}
+                  />
+                )}
+                {canalValue === "Ligação" && (
+                  <Input
+                    type="tel"
+                    placeholder="Número para ligação"
+                    value={canalDetalhe}
+                    onChange={(e) => setCanalDetalhe(e.target.value)}
+                  />
+                )}
+                {canalValue === "Outros" && (
+                  <Input
+                    placeholder="Como prefere ser contactado? (ex: e-mail, Telegram...)"
+                    value={canalDetalhe}
+                    onChange={(e) => setCanalDetalhe(e.target.value)}
+                  />
+                )}
               </div>
 
             </CardContent>
