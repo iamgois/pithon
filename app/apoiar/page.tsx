@@ -46,7 +46,7 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-const VIDEO_URL = "https://euk6y5si9i.ufs.sh/f/CpZyWbPiOXoNUJP0fCmgLZXSxvo8h2MHPnRrWBCzqeJ6mul1";
+const VIDEO_URL = "https://video.wixstatic.com/video/21a826_4c882bfc41044de4a738abc66b88e1c0/1080p/mp4/file.mp4";
 
 function RefCodeSetter() {
   const searchParams = useSearchParams();
@@ -145,14 +145,14 @@ export default function ApoiarPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-white text-xl font-bold tracking-wide">Assista o Vídeo</p>
-            <div className="relative">
+            <div className="relative h-[80vh] aspect-[9/16]">
               <video
                 ref={videoRef}
                 src={VIDEO_URL}
                 muted={isMuted}
                 playsInline
                 onEnded={() => setShowVideo(false)}
-                className={`w-full md:max-h-[70vh] rounded-xl transition-all duration-300 ${isMuted ? "blur-sm" : ""}`}
+                className={`w-full h-full rounded-xl object-cover transition-all duration-300 ${isMuted ? "blur-sm" : ""}`}
               />
               {isMuted && (
                 <button
@@ -170,13 +170,13 @@ export default function ApoiarPage() {
                   </span>
                 </button>
               )}
+              <button
+                onClick={() => setShowVideo(false)}
+                className="absolute top-2 right-2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-base shadow-[0_4px_14px_rgba(234,179,8,0.6)] hover:shadow-[0_6px_20px_rgba(234,179,8,0.8)] transition-all duration-200"
+              >
+                ✕
+              </button>
             </div>
-            <button
-              onClick={() => setShowVideo(false)}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white text-lg leading-none"
-            >
-              ✕
-            </button>
           </div>
         </div>
       )}
