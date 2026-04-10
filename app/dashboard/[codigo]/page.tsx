@@ -39,13 +39,13 @@ interface Apoiador {
   leads: Lead[];
 }
 
-function getVotoBadgeVariant(voto: string): "default" | "secondary" | "destructive" {
+function getApoioBadgeVariant(voto: string): "default" | "secondary" | "destructive" {
   if (voto === "sim") return "default";
   if (voto === "nao") return "destructive";
   return "secondary";
 }
 
-function getVotoLabel(voto: string): string {
+function getApoioLabel(voto: string): string {
   if (voto === "sim") return "Sim";
   if (voto === "nao") return "Não";
   return "Indeciso";
@@ -170,7 +170,7 @@ export default function DashboardPage({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
-                    <TableHead>Intenção de Voto</TableHead>
+                    <TableHead>Intenção de Apoio</TableHead>
                     <TableHead className="text-right">Data</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -179,8 +179,8 @@ export default function DashboardPage({
                     <TableRow key={lead.id}>
                       <TableCell className="font-medium">{lead.nome}</TableCell>
                       <TableCell>
-                        <Badge variant={getVotoBadgeVariant(lead.intencaoVoto)}>
-                          {getVotoLabel(lead.intencaoVoto)}
+                        <Badge variant={getApoioBadgeVariant(lead.intencaoVoto)}>
+                          {getApoioLabel(lead.intencaoVoto)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground text-sm">

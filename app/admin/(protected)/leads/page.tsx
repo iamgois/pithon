@@ -34,7 +34,7 @@ interface StatsData {
   leads: LeadRow[];
 }
 
-function getVotoBadgeVariant(
+function getApoioBadgeVariant(
   voto: string
 ): "default" | "secondary" | "destructive" {
   if (voto === "sim") return "default";
@@ -42,18 +42,18 @@ function getVotoBadgeVariant(
   return "secondary";
 }
 
-function getVotoLabel(voto: string): string {
+function getApoioLabel(voto: string): string {
   if (voto === "sim") return "Sim";
   if (voto === "nao") return "Não";
   return "Indeciso";
 }
 
 function downloadCSV(leads: LeadRow[]) {
-  const headers = ["Nome", "Email", "Intenção de Voto", "Indicado por", "Data"];
+  const headers = ["Nome", "Email", "Intenção de Apoio", "Indicado por", "Data"];
   const rows = leads.map((l) => [
     `"${l.nome}"`,
     `"${l.email}"`,
-    getVotoLabel(l.intencaoVoto),
+    getApoioLabel(l.intencaoVoto),
     l.indicadoPor ? `"${l.indicadoPor.nome}"` : "",
     new Date(l.createdAt).toLocaleDateString("pt-BR"),
   ]);
@@ -98,7 +98,7 @@ export default function AdminLeadsPage() {
     <div className="flex flex-col gap-8 max-w-5xl">
       <div>
         <h1 className="text-2xl font-bold">Leads</h1>
-        <p className="text-muted-foreground text-sm">Intenção de voto e contatos</p>
+        <p className="text-muted-foreground text-sm">Intenção de apoio e contatos</p>
       </div>
 
       {error && (
@@ -119,7 +119,7 @@ export default function AdminLeadsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Tem o voto</CardDescription>
+            <CardDescription>Tem o apoio</CardDescription>
             <CardTitle className="text-3xl text-green-500">
               {loading ? "—" : (stats?.intencaoVoto.sim ?? 0)}
             </CardTitle>
@@ -127,7 +127,7 @@ export default function AdminLeadsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Não tem o voto</CardDescription>
+            <CardDescription>Não tem o apoio</CardDescription>
             <CardTitle className="text-3xl text-red-500">
               {loading ? "—" : (stats?.intencaoVoto.nao ?? 0)}
             </CardTitle>
@@ -190,8 +190,8 @@ export default function AdminLeadsPage() {
                         {lead.email}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getVotoBadgeVariant(lead.intencaoVoto)}>
-                          {getVotoLabel(lead.intencaoVoto)}
+                        <Badge variant={getApoioBadgeVariant(lead.intencaoVoto)}>
+                          {getApoioLabel(lead.intencaoVoto)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm">

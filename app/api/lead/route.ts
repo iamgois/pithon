@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
 
     if (!nome || !email || !intencaoVoto) {
       return NextResponse.json(
-        { error: "Nome, email e intenção de voto são obrigatórios." },
+        { error: "Nome, email e intenção de apoio são obrigatórios." },
         { status: 400 }
       );
     }
