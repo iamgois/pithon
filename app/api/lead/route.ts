@@ -4,9 +4,9 @@ import { prisma } from "@/lib/prisma";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { nome, email, telefone, intencaoVoto } = body;
+    const { nome, email, telefone, intencaoApoio } = body;
 
-    if (!nome || !email || !intencaoVoto) {
+    if (!nome || !email || !intencaoApoio) {
       return NextResponse.json(
         { error: "Nome, email e intenção de apoio são obrigatórios." },
         { status: 400 }
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
           nome,
           email,
           telefone: telefone || null,
-          intencaoVoto,
+          intencaoApoio,
           origemCodigo: apoiador ? origemCodigo : null,
         },
       });

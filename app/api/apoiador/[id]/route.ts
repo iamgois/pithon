@@ -19,7 +19,7 @@ export async function GET(
             id: true,
             nome: true,
             email: true,
-            intencaoVoto: true,
+            intencaoApoio: true,
             createdAt: true,
           },
         },

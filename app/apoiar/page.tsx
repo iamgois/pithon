@@ -92,7 +92,7 @@ export default function ApoiarPage() {
         nome: data.nome,
         email: data.email,
         telefone: data.telefone,
-        intencaoVoto: "sim",
+        intencaoApoio: "sim",
       }),
     });
 

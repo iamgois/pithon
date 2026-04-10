@@ -34,7 +34,7 @@ model Lead {
   email        String    @unique
   telefone     String?
   origemCodigo String?
-  intencaoVoto String
+  intencaoApoio String
   createdAt    DateTime  @default(now())
   indicadoPor  Apoiador? @relation(fields: [origemCodigo], references: [codigoIndicacao])
   indicacao    Indicacao?

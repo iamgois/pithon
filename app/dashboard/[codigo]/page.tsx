@@ -25,7 +25,7 @@ interface Lead {
   id: string;
   nome: string;
   email: string;
-  intencaoVoto: string;
+  intencaoApoio: string;
   createdAt: string;
 }
 
@@ -179,8 +179,8 @@ export default function DashboardPage({
                     <TableRow key={lead.id}>
                       <TableCell className="font-medium">{lead.nome}</TableCell>
                       <TableCell>
-                        <Badge variant={getApoioBadgeVariant(lead.intencaoVoto)}>
-                          {getApoioLabel(lead.intencaoVoto)}
+                        <Badge variant={getApoioBadgeVariant(lead.intencaoApoio)}>
+                          {getApoioLabel(lead.intencaoApoio)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground text-sm">

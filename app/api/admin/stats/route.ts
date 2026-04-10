@@ -40,9 +40,9 @@ export async function GET(req: NextRequest) {
       totalApoiadores,
     ] = await Promise.all([
       prisma.lead.count({ where: leadWhere }),
-      prisma.lead.count({ where: { ...leadWhere, intencaoVoto: "sim" } }),
-      prisma.lead.count({ where: { ...leadWhere, intencaoVoto: "nao" } }),
-      prisma.lead.count({ where: { ...leadWhere, intencaoVoto: "indeciso" } }),
+      prisma.lead.count({ where: { ...leadWhere, intencaoApoio: "sim" } }),
+      prisma.lead.count({ where: { ...leadWhere, intencaoApoio: "nao" } }),
+      prisma.lead.count({ where: { ...leadWhere, intencaoApoio: "indeciso" } }),
       prisma.apoiador.findMany({
         orderBy: { totalIndicacoes: "desc" },
         take: 10,
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       totalLeads,
-      intencaoVoto: { sim: simCount, nao: naoCount, indeciso },
+      intencaoApoio: { sim: simCount, nao: naoCount, indeciso },
       topApoiadores,
       leads,
       totalApoiadores,

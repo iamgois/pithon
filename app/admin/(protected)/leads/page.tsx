@@ -23,14 +23,14 @@ interface LeadRow {
   id: string;
   nome: string;
   email: string;
-  intencaoVoto: string;
+  intencaoApoio: string;
   createdAt: string;
   indicadoPor: { nome: string; codigoIndicacao: string } | null;
 }
 
 interface StatsData {
   totalLeads: number;
-  intencaoVoto: { sim: number; nao: number; indeciso: number };
+  intencaoApoio: { sim: number; nao: number; indeciso: number };
   leads: LeadRow[];
 }
 
@@ -53,7 +53,7 @@ function downloadCSV(leads: LeadRow[]) {
   const rows = leads.map((l) => [
     `"${l.nome}"`,
     `"${l.email}"`,
-    getApoioLabel(l.intencaoVoto),
+    getApoioLabel(l.intencaoApoio),
     l.indicadoPor ? `"${l.indicadoPor.nome}"` : "",
     new Date(l.createdAt).toLocaleDateString("pt-BR"),
   ]);
@@ -121,7 +121,7 @@ export default function AdminLeadsPage() {
           <CardHeader className="pb-2">
             <CardDescription>Tem o apoio</CardDescription>
             <CardTitle className="text-3xl text-green-500">
-              {loading ? "—" : (stats?.intencaoVoto.sim ?? 0)}
+              {loading ? "—" : (stats?.intencaoApoio.sim ?? 0)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -129,7 +129,7 @@ export default function AdminLeadsPage() {
           <CardHeader className="pb-2">
             <CardDescription>Não tem o apoio</CardDescription>
             <CardTitle className="text-3xl text-red-500">
-              {loading ? "—" : (stats?.intencaoVoto.nao ?? 0)}
+              {loading ? "—" : (stats?.intencaoApoio.nao ?? 0)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -137,7 +137,7 @@ export default function AdminLeadsPage() {
           <CardHeader className="pb-2">
             <CardDescription>Indeciso</CardDescription>
             <CardTitle className="text-3xl text-amber-500">
-              {loading ? "—" : (stats?.intencaoVoto.indeciso ?? 0)}
+              {loading ? "—" : (stats?.intencaoApoio.indeciso ?? 0)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -190,8 +190,8 @@ export default function AdminLeadsPage() {
                         {lead.email}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getApoioBadgeVariant(lead.intencaoVoto)}>
-                          {getApoioLabel(lead.intencaoVoto)}
+                        <Badge variant={getApoioBadgeVariant(lead.intencaoApoio)}>
+                          {getApoioLabel(lead.intencaoApoio)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm">

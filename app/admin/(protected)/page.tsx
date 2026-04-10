@@ -22,7 +22,7 @@ interface ApoiadorSummary {
 interface StatsData {
   totalLeads: number;
   totalApoiadores: number;
-  intencaoVoto: { sim: number; nao: number; indeciso: number };
+  intencaoApoio: { sim: number; nao: number; indeciso: number };
   topApoiadores: ApoiadorSummary[];
 }
 
