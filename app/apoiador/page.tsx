@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useRef } from "react";
-import { VolumeX } from "lucide-react";
+import { Play } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -220,7 +220,7 @@ export default function Home() {
                   className="absolute inset-0 flex items-center justify-center"
                 >
                   <span className="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-sm border border-white/20 text-white hover:bg-black/80 transition-colors">
-                    <VolumeX size={28} />
+                    <Play size={28} fill="white" />
                   </span>
                 </button>
               )}
