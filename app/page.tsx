@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { HandRaisedIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
 
 export default function Home() {
   return (
@@ -33,16 +34,18 @@ export default function Home() {
         <div className="w-full flex flex-col gap-3">
           <Link
             href="/apoiador"
-            className={cn(buttonVariants({ size: "lg" }), "w-full font-semibold h-14 text-base justify-center")}
+            className={cn(buttonVariants({ size: "lg" }), "w-full")}
           >
-            Quero ser Apoiador
+            <HandRaisedIcon data-icon="inline-start" className="size-4" />
+            Quero apoiar
           </Link>
 
           <Link
-            href="/admin"
-            className={cn(buttonVariants({ size: "lg" }), "w-full font-semibold h-14 text-base justify-center")}
+            href="/login"
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
           >
-            Painel Administrativo
+            <ArrowRightOnRectangleIcon data-icon="inline-start" className="size-4" />
+            Login
           </Link>
         </div>
 

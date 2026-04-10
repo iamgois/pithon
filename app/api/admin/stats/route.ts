@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session) {
+    if (!session || session.user.role !== "admin") {
       return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
     }
 

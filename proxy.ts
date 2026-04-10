@@ -15,12 +15,14 @@ export function proxy(request: NextRequest) {
   }
 
   // Protect /admin routes (except /admin/login)
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isAdminLoginPage = pathname === "/admin/login";
+  if (isAdminRoute && !isAdminLoginPage) {
     const token =
       request.cookies.get("authjs.session-token") ||
       request.cookies.get("__Secure-authjs.session-token");
     if (!token) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+      return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 

@@ -19,16 +19,24 @@ import {
 } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-const schema = z.object({
-  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  whatsapp: z.string().min(10, "WhatsApp inválido"),
-  cidade: z.string().min(2, "Cidade obrigatória"),
-  bairro: z.string().min(2, "Bairro obrigatório"),
-  profissao: z.string().optional(),
-  dataNascimento: z.string().min(1, "Data de nascimento obrigatória"),
-  nivelApoio: z.string().min(1, "Selecione seu nível de apoio"),
-  canalComunicacao: z.string().min(1, "Selecione o canal preferido"),
-});
+const schema = z
+  .object({
+    nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+    email: z.string().email("E-mail inválido"),
+    senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    confirmarSenha: z.string().min(1, "Confirme sua senha"),
+    whatsapp: z.string().min(10, "WhatsApp inválido"),
+    cidade: z.string().min(2, "Cidade obrigatória"),
+    bairro: z.string().min(2, "Bairro obrigatório"),
+    profissao: z.string().optional(),
+    dataNascimento: z.string().min(1, "Data de nascimento obrigatória"),
+    nivelApoio: z.string().min(1, "Selecione seu nível de apoio"),
+    canalComunicacao: z.string().min(1, "Selecione o canal preferido"),
+  })
+  .refine((d) => d.senha === d.confirmarSenha, {
+    message: "As senhas não coincidem",
+    path: ["confirmarSenha"],
+  });
 
 type FormData = z.infer<typeof schema>;
 
@@ -153,6 +161,8 @@ export default function Home() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         nome: data.nome,
+        email: data.email,
+        senha: data.senha,
         telefone: data.whatsapp,
         dataNascimento: data.dataNascimento,
         cidade: data.cidade,
@@ -330,6 +340,37 @@ export default function Home() {
               <Field label="Nome completo *" error={errors.nome?.message}>
                 <Input placeholder="Seu nome completo" {...register("nome")} aria-invalid={!!errors.nome} />
               </Field>
+
+              <Field label="E-mail *" error={errors.email?.message}>
+                <Input
+                  type="email"
+                  placeholder="seu@email.com"
+                  {...register("email")}
+                  aria-invalid={!!errors.email}
+                  autoComplete="email"
+                />
+              </Field>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Senha *" error={errors.senha?.message}>
+                  <Input
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    {...register("senha")}
+                    aria-invalid={!!errors.senha}
+                    autoComplete="new-password"
+                  />
+                </Field>
+                <Field label="Confirmar senha *" error={errors.confirmarSenha?.message}>
+                  <Input
+                    type="password"
+                    placeholder="Repita a senha"
+                    {...register("confirmarSenha")}
+                    aria-invalid={!!errors.confirmarSenha}
+                    autoComplete="new-password"
+                  />
+                </Field>
+              </div>
 
               <Field label="WhatsApp *" error={errors.whatsapp?.message}>
                 <Input
