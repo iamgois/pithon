@@ -1,7 +1,27 @@
 "use client";
 
+declare global {
+  interface Window {
+    YT: {
+      Player: new (
+        id: string,
+        config: {
+          videoId: string;
+          playerVars?: Record<string, number | string>;
+          events?: {
+            onReady?: () => void;
+            onStateChange?: (e: { data: number }) => void;
+          };
+        }
+      ) => { playVideo: () => void; unMute: () => void; destroy: () => void };
+      PlayerState: { ENDED: number };
+    };
+    onYouTubeIframeAPIReady: () => void;
+  }
+}
+
 import Image from "next/image";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Play } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -111,13 +131,15 @@ function ToggleChip({
   );
 }
 
-const VIDEO_URL = "https://euk6y5si9i.ufs.sh/f/CpZyWbPiOXoNUJP0fCmgLZXSxvo8h2MHPnRrWBCzqeJ6mul1";
+const YOUTUBE_VIDEO_ID = "akd7j7vOgKI";
+const YOUTUBE_THUMBNAIL = `https://img.youtube.com/vi/${YOUTUBE_VIDEO_ID}/maxresdefault.jpg`;
 
 export default function Home() {
   const [submitted, setSubmitted] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [showThumbnail, setShowThumbnail] = useState(true);
+  const [playerReady, setPlayerReady] = useState(false);
+  const playerRef = useRef<{ playVideo: () => void; unMute: () => void; destroy: () => void } | null>(null);
   const [submittedName, setSubmittedName] = useState("");
   const [referralLink, setReferralLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -130,6 +152,50 @@ export default function Home() {
   const [instagramDetalhe, setInstagramDetalhe] = useState("");
   const [ligacaoDetalhe, setLigacaoDetalhe] = useState("");
   const [outrosDetalhe, setOutrosDetalhe] = useState("");
+
+  useEffect(() => {
+    if (!showVideo) return;
+    setShowThumbnail(true);
+    setPlayerReady(false);
+
+    const initPlayer = () => {
+      playerRef.current = new window.YT.Player("yt-player", {
+        videoId: YOUTUBE_VIDEO_ID,
+        playerVars: { autoplay: 0, mute: 1, playsinline: 1, rel: 0, modestbranding: 1 },
+        events: {
+          onReady: () => setPlayerReady(true),
+          onStateChange: (e: { data: number }) => {
+            if (e.data === 0) setShowVideo(false);
+          },
+        },
+      });
+    };
+
+    if (typeof window !== "undefined" && window.YT?.Player) {
+      initPlayer();
+    } else {
+      if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+        const tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(tag);
+      }
+      window.onYouTubeIframeAPIReady = initPlayer;
+    }
+
+    return () => {
+      playerRef.current?.destroy();
+      playerRef.current = null;
+    };
+  }, [showVideo]);
+
+  function handlePlay() {
+    if (!playerReady) return;
+    setShowThumbnail(false);
+    setTimeout(() => {
+      playerRef.current?.unMute();
+      playerRef.current?.playVideo();
+    }, 80);
+  }
 
   const {
     register,
@@ -293,33 +359,35 @@ export default function Home() {
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-white text-xl font-bold tracking-wide">Assista o Vídeo</p>
-            <div className="relative">
-              <video
-                ref={videoRef}
-                src={VIDEO_URL}
-                muted={isMuted}
-                playsInline
-                onEnded={() => setShowVideo(false)}
-                className={`w-full md:max-h-[70vh] rounded-xl transition-all duration-300 ${isMuted ? "blur-sm" : ""}`}
+            <div className="relative w-full max-w-[560px]">
+              {/* YouTube iframe */}
+              <div
+                id="yt-player"
+                className="w-full aspect-video rounded-xl overflow-hidden"
               />
-              {isMuted && (
-                <button
-                  onClick={() => {
-                    setIsMuted(false);
-                    if (videoRef.current) {
-                      videoRef.current.muted = false;
-                      videoRef.current.play();
-                    }
-                  }}
-                  className="absolute inset-0 flex items-center justify-center"
-                >
-                  <span className="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-sm border border-white/20 text-white hover:bg-black/80 transition-colors">
-                    <Play size={28} fill="white" />
-                  </span>
-                </button>
+
+              {/* Thumbnail borrada sobreposta enquanto não clicou em play */}
+              {showThumbnail && (
+                <div className="absolute inset-0 rounded-xl overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={YOUTUBE_THUMBNAIL}
+                    alt="Thumbnail do vídeo"
+                    className="w-full h-full object-cover blur-sm scale-105"
+                  />
+                  <button
+                    onClick={handlePlay}
+                    disabled={!playerReady}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    <span className="w-16 h-16 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-sm border border-white/20 text-white hover:bg-black/80 transition-colors disabled:opacity-50">
+                      <Play size={28} fill="white" />
+                    </span>
+                  </button>
+                </div>
               )}
 
-              {/* Botão fechar sobreposto ao vídeo */}
+              {/* Botão fechar amarelo sobreposto */}
               <button
                 onClick={() => setShowVideo(false)}
                 className="absolute top-2 right-2 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-base shadow-[0_4px_14px_rgba(234,179,8,0.6)] hover:shadow-[0_6px_20px_rgba(234,179,8,0.8)] transition-all duration-200"
