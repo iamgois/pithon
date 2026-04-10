@@ -206,8 +206,18 @@ export default function Home() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-[420px] text-center gap-6 py-10 px-6">
-          <div className="text-5xl">🎉</div>
+        <div className="w-full max-w-[420px] flex flex-col gap-4">
+
+          <Image
+            src="https://euk6y5si9i.ufs.sh/f/CpZyWbPiOXoNiK26jkkyQvY72xN0L1UOFtSXsPojrmA84Zzq"
+            alt="Bem-vindo ao movimento Pithon"
+            width={420}
+            height={420}
+            className="w-full h-auto rounded-2xl"
+            priority
+          />
+
+        <Card className="w-full text-center gap-6 py-8 px-6">
           <div className="flex flex-col gap-2">
             <CardTitle className="text-xl">Obrigado pelo apoio, {submittedName}!</CardTitle>
             <CardDescription>Juntos seremos mais fortes!</CardDescription>
@@ -247,6 +257,7 @@ export default function Home() {
             Preencher novamente
           </Button>
         </Card>
+        </div>
       </div>
     );
   }
