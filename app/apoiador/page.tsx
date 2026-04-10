@@ -252,7 +252,7 @@ export default function Home() {
             className="flex flex-col items-center gap-4 my-10"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-white text-xl font-bold tracking-wide">Receba este chamado</p>
+            <p className="text-white text-xl font-bold tracking-wide">Assista o Vídeo</p>
             <div className="relative">
               <video
                 ref={videoRef}
