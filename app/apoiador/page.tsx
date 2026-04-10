@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +18,6 @@ import {
   CardDescription,
   CardFooter,
 } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const schema = z
   .object({
@@ -31,7 +31,6 @@ const schema = z
     profissao: z.string().optional(),
     dataNascimento: z.string().min(1, "Data de nascimento obrigatória"),
     nivelApoio: z.string().min(1, "Selecione seu nível de apoio"),
-    canalComunicacao: z.string().min(1, "Selecione o canal preferido"),
   })
   .refine((d) => d.senha === d.confirmarSenha, {
     message: "As senhas não coincidem",
@@ -126,7 +125,11 @@ export default function Home() {
   const [assuntos, setAssuntos] = useState<string[]>([]);
   const [hobbies, setHobbies] = useState<string[]>([]);
   const [hobbyOutro, setHobbyOutro] = useState("");
-  const [canalDetalhe, setCanalDetalhe] = useState("");
+  const [canais, setCanais] = useState<string[]>([]);
+  const [canaisError, setCanaisError] = useState(false);
+  const [instagramDetalhe, setInstagramDetalhe] = useState("");
+  const [ligacaoDetalhe, setLigacaoDetalhe] = useState("");
+  const [outrosDetalhe, setOutrosDetalhe] = useState("");
 
   const {
     register,
@@ -139,7 +142,6 @@ export default function Home() {
 
   const whatsappValue = watch("whatsapp", "");
   const nivelApoioValue = watch("nivelApoio", "");
-  const canalValue = watch("canalComunicacao", "");
 
   function handleWhatsAppChange(e: React.ChangeEvent<HTMLInputElement>) {
     setValue("whatsapp", formatWhatsApp(e.target.value), { shouldValidate: true });
@@ -153,8 +155,24 @@ export default function Home() {
     setHobbies((prev) => prev.includes(h) ? prev.filter((x) => x !== h) : [...prev, h]);
   }
 
+  function toggleCanal(c: string) {
+    setCanaisError(false);
+    setCanais((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]);
+  }
+
   async function onSubmit(data: FormData) {
+    if (canais.length === 0) {
+      setCanaisError(true);
+      return;
+    }
     setSubmitError(null);
+
+    const canalComunicacao = canais.map((c) => {
+      if (c === "Instagram" && instagramDetalhe) return `Instagram (${instagramDetalhe})`;
+      if (c === "Ligação" && ligacaoDetalhe) return `Ligação (${ligacaoDetalhe})`;
+      if (c === "Outros" && outrosDetalhe) return `Outros (${outrosDetalhe})`;
+      return c;
+    }).join(", ");
 
     const res = await fetch("/api/apoiador", {
       method: "POST",
@@ -173,9 +191,7 @@ export default function Home() {
           ? hobbies.map((h) => h === "Outros" && hobbyOutro ? `Outros (${hobbyOutro})` : h).join(", ")
           : null,
         nivelApoio: data.nivelApoio,
-        canalComunicacao: canalDetalhe
-          ? `${data.canalComunicacao} (${canalDetalhe})`
-          : data.canalComunicacao,
+        canalComunicacao,
       }),
     });
 
@@ -193,7 +209,10 @@ export default function Home() {
     setAssuntos([]);
     setHobbies([]);
     setHobbyOutro("");
-    setCanalDetalhe("");
+    setCanais([]);
+    setInstagramDetalhe("");
+    setLigacaoDetalhe("");
+    setOutrosDetalhe("");
   }
 
   async function handleCopyLink() {
@@ -472,46 +491,52 @@ export default function Home() {
 
               <div className="flex flex-col gap-2">
                 <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Melhor canal para falarmos com você *
+                  Melhor canal para falarmos com você * <span className="normal-case font-normal text-muted-foreground">(pode marcar mais de um)</span>
                 </Label>
-                <RadioGroup
-                  value={canalValue}
-                  onValueChange={(val: string | null) => { setValue("canalComunicacao", val ?? "", { shouldValidate: true }); setCanalDetalhe(""); }}
-                  className="grid grid-cols-2 gap-2"
-                >
-                  {CANAIS.map((canal) => (
-                    <label
-                      key={canal}
-                      className={`flex items-center gap-2 rounded-lg border-2 px-3 py-2.5 cursor-pointer transition-colors ${
-                        canalValue === canal ? "border-primary bg-primary/10" : "border-border hover:border-zinc-600"
-                      }`}
-                    >
-                      <RadioGroupItem value={canal} className="shrink-0" />
-                      <span className="text-sm">{canal}</span>
-                    </label>
-                  ))}
-                </RadioGroup>
-                {errors.canalComunicacao && <p className="text-xs text-destructive">{errors.canalComunicacao.message}</p>}
-                {canalValue === "Instagram" && (
+                <div className="grid grid-cols-2 gap-2">
+                  {CANAIS.map((canal) => {
+                    const selected = canais.includes(canal);
+                    return (
+                      <label
+                        key={canal}
+                        className={`flex items-center gap-2 rounded-lg border-2 px-3 py-2.5 cursor-pointer transition-colors ${
+                          selected ? "border-primary bg-primary/10" : "border-border hover:border-zinc-600"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleCanal(canal)}
+                          className="accent-primary w-4 h-4 shrink-0"
+                        />
+                        <span className="text-sm">{canal}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {canaisError && (
+                  <p className="text-xs text-destructive">Selecione pelo menos um canal</p>
+                )}
+                {canais.includes("Instagram") && (
                   <Input
                     placeholder="Seu @ do Instagram"
-                    value={canalDetalhe}
-                    onChange={(e) => setCanalDetalhe(e.target.value)}
+                    value={instagramDetalhe}
+                    onChange={(e) => setInstagramDetalhe(e.target.value)}
                   />
                 )}
-                {canalValue === "Ligação" && (
+                {canais.includes("Ligação") && (
                   <Input
                     type="tel"
                     placeholder="Número para ligação"
-                    value={canalDetalhe}
-                    onChange={(e) => setCanalDetalhe(e.target.value)}
+                    value={ligacaoDetalhe}
+                    onChange={(e) => setLigacaoDetalhe(e.target.value)}
                   />
                 )}
-                {canalValue === "Outros" && (
+                {canais.includes("Outros") && (
                   <Input
                     placeholder="Como prefere ser contactado? (ex: e-mail, Telegram...)"
-                    value={canalDetalhe}
-                    onChange={(e) => setCanalDetalhe(e.target.value)}
+                    value={outrosDetalhe}
+                    onChange={(e) => setOutrosDetalhe(e.target.value)}
                   />
                 )}
               </div>
