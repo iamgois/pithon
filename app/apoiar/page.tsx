@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
-import { VolumeX, Volume2 } from "lucide-react";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { VolumeX } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,19 +48,22 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 
 const VIDEO_URL = "https://euk6y5si9i.ufs.sh/f/CpZyWbPiOXoNKdQ1IOsWUxVD1RCQngBokYcSH4htGAmM9bys";
 
-export default function ApoiarPage() {
+function RefCodeSetter() {
   const searchParams = useSearchParams();
-  const [submitted, setSubmitted] = useState(false);
-  const [showVideo, setShowVideo] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (ref) {
       document.cookie = `ref_code=${ref}; path=/; max-age=86400; SameSite=Lax`;
     }
   }, [searchParams]);
+  return null;
+}
+
+export default function ApoiarPage() {
+  const [submitted, setSubmitted] = useState(false);
+  const [showVideo, setShowVideo] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [submittedName, setSubmittedName] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -129,6 +132,9 @@ export default function ApoiarPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Suspense fallback={null}>
+        <RefCodeSetter />
+      </Suspense>
       {showVideo && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
