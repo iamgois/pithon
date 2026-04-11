@@ -22,9 +22,9 @@ interface ApoiadorSummary {
 interface StatsData {
   totalLeads: number;
   totalApoiadores: number;
+  totalIndicacoes: number;
   intencaoApoio: { sim: number; nao: number; indeciso: number };
   topApoiadores: ApoiadorSummary[];
-  todosApoiadores: ApoiadorSummary[];
 }
 
 export default function AdminDashboardPage() {
@@ -51,10 +51,7 @@ export default function AdminDashboardPage() {
     fetchStats();
   }, [fetchStats]);
 
-  const totalIndicacoes = (stats?.todosApoiadores ?? []).reduce(
-    (acc, a) => acc + a.totalIndicacoes,
-    0
-  );
+  const totalIndicacoes = stats?.totalIndicacoes ?? 0;
 
   return (
     <div className="flex flex-col gap-8 max-w-4xl">

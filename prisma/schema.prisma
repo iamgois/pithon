@@ -27,6 +27,9 @@ model Apoiador {
   createdAt         DateTime @default(now())
   indicacoes        Indicacao[]
   leads             Lead[]
+
+  @@index([indicadoPorCodigo])
+  @@index([createdAt])
 }
 
 model Lead {
@@ -39,6 +42,10 @@ model Lead {
   createdAt    DateTime  @default(now())
   indicadoPor  Apoiador? @relation(fields: [origemCodigo], references: [codigoIndicacao])
   indicacao    Indicacao?
+
+  @@index([origemCodigo])
+  @@index([intencaoApoio])
+  @@index([createdAt])
 }
 
 model Indicacao {

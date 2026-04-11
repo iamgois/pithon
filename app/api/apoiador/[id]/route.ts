@@ -15,6 +15,7 @@ export async function GET(
       include: {
         leads: {
           orderBy: { createdAt: "desc" },
+          take: 100,
           select: {
             id: true,
             nome: true,

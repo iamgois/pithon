@@ -24,6 +24,9 @@ export async function POST(req: NextRequest) {
     const hashed = await bcrypt.hash(password, 10);
     const email = record.email;
 
+    // Consume the token first — prevents replay attacks even if update fails
+    await prisma.passwordResetToken.delete({ where: { token } });
+
     // Update whichever account owns this email
     const [adminUpdate, apoiadorUpdate] = await Promise.all([
       prisma.admin.updateMany({ where: { email }, data: { password: hashed } }),
@@ -33,9 +36,6 @@ export async function POST(req: NextRequest) {
     if (adminUpdate.count === 0 && apoiadorUpdate.count === 0) {
       return NextResponse.json({ error: "Conta não encontrada." }, { status: 404 });
     }
-
-    // Consume the token
-    await prisma.passwordResetToken.delete({ where: { token } });
 
     return NextResponse.json({ ok: true });
   } catch (err) {

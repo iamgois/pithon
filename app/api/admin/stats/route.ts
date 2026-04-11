@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
     const apoiadorFilter = searchParams.get("apoiador") || undefined;
     const dataInicio = searchParams.get("dataInicio") || undefined;
     const dataFim = searchParams.get("dataFim") || undefined;
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const perPage = 100;
+    const skip = (page - 1) * perPage;
 
     const leadWhere: Record<string, unknown> = {};
     if (apoiadorFilter) {
@@ -51,21 +54,23 @@ export async function GET(req: NextRequest) {
       indeciso,
       topApoiadores,
       totalApoiadores,
-      todosApoiadores,
+      indicacoesAggregate,
     ] = await Promise.all([
       prisma.lead.findMany({
         where: leadWhere,
         orderBy: { createdAt: "desc" },
+        take: perPage,
+        skip,
         include: { indicadoPor: { select: { nome: true, codigoIndicacao: true } } },
       }),
       prisma.apoiador.findMany({
         where: {
-          indicadoPorCodigo: apoiadorFilter
-            ? apoiadorFilter
-            : { not: null },
+          indicadoPorCodigo: apoiadorFilter ? apoiadorFilter : { not: null },
           ...(apoiadorDateFilter ? { createdAt: apoiadorDateFilter } : {}),
         },
         orderBy: { createdAt: "desc" },
+        take: perPage,
+        skip,
         select: {
           id: true,
           nome: true,
@@ -85,10 +90,7 @@ export async function GET(req: NextRequest) {
         select: { id: true, nome: true, email: true, codigoIndicacao: true, totalIndicacoes: true, createdAt: true },
       }),
       prisma.apoiador.count(),
-      prisma.apoiador.findMany({
-        orderBy: { totalIndicacoes: "desc" },
-        select: { id: true, nome: true, email: true, codigoIndicacao: true, totalIndicacoes: true, createdAt: true },
-      }),
+      prisma.apoiador.aggregate({ _sum: { totalIndicacoes: true } }),
     ]);
 
     // Resolve the names of who indicated each apoiador
@@ -128,14 +130,17 @@ export async function GET(req: NextRequest) {
     );
 
     const totalLeads = totalLeadsDB + apoiadoresIndicados.length;
+    const totalIndicacoes = indicacoesAggregate._sum.totalIndicacoes ?? 0;
 
     return NextResponse.json({
       totalLeads,
+      totalIndicacoes,
       intencaoApoio: { sim: simCount + apoiadoresIndicados.length, nao: naoCount, indeciso },
       topApoiadores,
-      todosApoiadores,
       leads,
       totalApoiadores,
+      page,
+      perPage,
     });
   } catch (error) {
     console.error("[GET /api/admin/stats]", error);

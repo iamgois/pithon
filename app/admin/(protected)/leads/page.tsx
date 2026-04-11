@@ -35,6 +35,8 @@ interface StatsData {
   totalLeads: number;
   intencaoApoio: { sim: number; nao: number; indeciso: number };
   leads: LeadRow[];
+  page: number;
+  perPage: number;
 }
 
 function getApoioBadgeVariant(
@@ -91,12 +93,13 @@ export default function AdminLeadsPage() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
-  const fetchStats = useCallback(async () => {
+  const fetchStats = useCallback(async (p: number) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/stats");
+      const res = await fetch(`/api/admin/stats?page=${p}`);
       if (!res.ok) throw new Error("Falha ao carregar dados.");
       const data = await res.json();
       setStats(data);
@@ -108,8 +111,8 @@ export default function AdminLeadsPage() {
   }, []);
 
   useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    fetchStats(page);
+  }, [fetchStats, page]);
 
   const origin =
     typeof window !== "undefined" ? window.location.origin : "";
@@ -178,7 +181,7 @@ export default function AdminLeadsPage() {
             onClick={() => stats && downloadCSV(stats.leads)}
             disabled={!stats || stats.leads.length === 0}
           >
-            Exportar CSV
+            Exportar página
           </Button>
         </CardHeader>
         <CardContent className="p-0">
@@ -193,6 +196,7 @@ export default function AdminLeadsPage() {
           ) : (
             <div className="overflow-x-auto">
               <Table>
+
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
@@ -241,6 +245,33 @@ export default function AdminLeadsPage() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {stats && stats.totalLeads > stats.perPage && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <p className="text-xs text-muted-foreground">
+                Página {page} · {stats.leads.length} de {stats.totalLeads} registros
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={page <= 1 || loading}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  ← Anterior
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={stats.leads.length < stats.perPage || loading}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Próxima →
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
