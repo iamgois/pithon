@@ -34,19 +34,48 @@ export async function GET(
       );
     }
 
-    const [leadsIndicados, apoiadoresRecrutados] = await Promise.all([
-      prisma.indicacao.count({ where: { apoiadorId: apoiador.id } }),
-      prisma.apoiador.count({
-        where: { indicadoPorCodigo: apoiador.codigoIndicacao },
-      }),
-    ]);
-    const totalIndicacoes = leadsIndicados + apoiadoresRecrutados;
+    // Fetch apoiadores who registered via this apoiador's referral link
+    const apoiadoresRecrutadosList = await prisma.apoiador.findMany({
+      where: { indicadoPorCodigo: apoiador.codigoIndicacao },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        createdAt: true,
+      },
+    });
+
+    // Normalize into the same shape as Lead rows
+    const recrutadosRows = apoiadoresRecrutadosList.map((a) => ({
+      id: a.id,
+      nome: a.nome,
+      email: a.email ?? "",
+      intencaoApoio: "sim" as const,
+      tipo: "apoiador" as const,
+      createdAt: a.createdAt.toISOString(),
+    }));
+
+    // Normalize leads
+    const leadRows = apoiador.leads.map((l) => ({
+      ...l,
+      tipo: "lead" as const,
+      createdAt: new Date(l.createdAt).toISOString(),
+    }));
+
+    // Merge & sort by date desc
+    const indicacoes = [...leadRows, ...recrutadosRows].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const totalIndicacoes = indicacoes.length;
 
     const baseUrl = req.headers.get("origin") || process.env.NEXTAUTH_URL || "";
     const link = `${baseUrl}/apoiar?ref=${apoiador.codigoIndicacao}`;
 
     return NextResponse.json({
-      apoiador: { ...apoiador, totalIndicacoes },
+      apoiador: { ...apoiador, totalIndicacoes, indicacoes },
       link,
     });
   } catch (error) {

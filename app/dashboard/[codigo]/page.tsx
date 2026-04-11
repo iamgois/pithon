@@ -21,11 +21,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface Lead {
+interface IndicacaoRow {
   id: string;
   nome: string;
   email: string;
   intencaoApoio: string;
+  tipo: "lead" | "apoiador";
   createdAt: string;
 }
 
@@ -36,7 +37,7 @@ interface Apoiador {
   codigoIndicacao: string;
   totalIndicacoes: number;
   createdAt: string;
-  leads: Lead[];
+  indicacoes: IndicacaoRow[];
 }
 
 function getApoioBadgeVariant(voto: string): "default" | "secondary" | "destructive" {
@@ -155,10 +156,10 @@ export default function DashboardPage({
 
         <Separator />
 
-        {/* Leads table */}
+        {/* Indicações table */}
         <div>
           <h2 className="text-lg font-semibold mb-4">Pessoas que você indicou</h2>
-          {apoiador.leads.length === 0 ? (
+          {apoiador.indicacoes.length === 0 ? (
             <Card>
               <CardContent className="py-10 text-center text-muted-foreground text-sm">
                 Você ainda não tem indicações. Compartilhe seu link!
@@ -170,21 +171,27 @@ export default function DashboardPage({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
+                    <TableHead>Tipo</TableHead>
                     <TableHead>Intenção de Apoio</TableHead>
                     <TableHead className="text-right">Data</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {apoiador.leads.map((lead) => (
-                    <TableRow key={lead.id}>
-                      <TableCell className="font-medium">{lead.nome}</TableCell>
+                  {apoiador.indicacoes.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="font-medium">{row.nome}</TableCell>
                       <TableCell>
-                        <Badge variant={getApoioBadgeVariant(lead.intencaoApoio)}>
-                          {getApoioLabel(lead.intencaoApoio)}
+                        <Badge variant={row.tipo === "apoiador" ? "default" : "secondary"}>
+                          {row.tipo === "apoiador" ? "Apoiador" : "Lead"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getApoioBadgeVariant(row.intencaoApoio)}>
+                          {getApoioLabel(row.intencaoApoio)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground text-sm">
-                        {new Date(lead.createdAt).toLocaleDateString("pt-BR")}
+                        {new Date(row.createdAt).toLocaleDateString("pt-BR")}
                       </TableCell>
                     </TableRow>
                   ))}
