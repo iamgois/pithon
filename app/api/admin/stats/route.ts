@@ -13,8 +13,6 @@ export async function GET(req: NextRequest) {
     const apoiadorFilter = searchParams.get("apoiador") || undefined;
     const dataInicio = searchParams.get("dataInicio") || undefined;
     const dataFim = searchParams.get("dataFim") || undefined;
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-    const perPage = 100;
 
     const leadWhere: Record<string, unknown> = {};
     if (apoiadorFilter) {
@@ -77,6 +75,7 @@ export async function GET(req: NextRequest) {
           email: true,
           telefone: true,
           indicadoPorCodigo: true,
+          codigoIndicacao: true,
           createdAt: true,
         },
       }),
@@ -154,12 +153,20 @@ export async function GET(req: NextRequest) {
       : [];
     const refMap = Object.fromEntries(refApoiadores.map((a) => [a.codigoIndicacao, a.nome]));
 
-    // Normaliza todos os apoiadores para o mesmo shape dos leads
-    const apoiadorRows = todosApoiadores.map((a) => ({
+    // Lista de leads (Lead table only)
+    const leads = leadsRaw.map((l) => ({
+      ...l,
+      tipo: "lead" as const,
+      createdAt: l.createdAt.toISOString(),
+    }));
+
+    // Lista de apoiadores (Apoiador table only)
+    const apoiadores = todosApoiadores.map((a) => ({
       id: a.id,
       nome: a.nome,
       email: a.email ?? "",
       telefone: a.telefone ?? null,
+      codigoIndicacao: a.codigoIndicacao,
       origemCodigo: a.indicadoPorCodigo ?? null,
       intencaoApoio: "sim",
       tipo: "apoiador" as const,
@@ -169,29 +176,14 @@ export async function GET(req: NextRequest) {
         : null,
     }));
 
-    const leadRows = leadsRaw.map((l) => ({
-      ...l,
-      tipo: "lead" as const,
-      createdAt: l.createdAt.toISOString(),
-    }));
-
-    // Merge, ordena por data e pagina no cliente
-    const allRows = [...leadRows, ...apoiadorRows].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    const totalLeads = totalLeadsDB + todosApoiadores.length;
-    const skip = (page - 1) * perPage;
-    const leads = allRows.slice(skip, skip + perPage);
-
     return NextResponse.json({
-      totalLeads,
+      totalLeads: totalLeadsDB,
+      totalApoiadores,
       totalIndicacoes,
-      intencaoApoio: { sim: simCount + todosApoiadores.length, nao: naoCount, indeciso },
+      intencaoApoio: { sim: simCount, nao: naoCount, indeciso },
       topApoiadores,
       leads,
-      totalApoiadores,
-      page,
-      perPage,
+      apoiadores,
     });
   } catch (error) {
     console.error("[GET /api/admin/stats]", error);
