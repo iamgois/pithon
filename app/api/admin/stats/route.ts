@@ -52,9 +52,11 @@ export async function GET(req: NextRequest) {
       simCount,
       naoCount,
       indeciso,
-      topApoiadores,
+      allApoiadoresRank,
       totalApoiadores,
-      indicacoesAggregate,
+      indicacaoCount,
+      indicacaoPorApoiador,
+      apoiadoresPorCodigoIndicador,
     ] = await Promise.all([
       prisma.lead.findMany({
         where: leadWhere,
@@ -85,13 +87,62 @@ export async function GET(req: NextRequest) {
       prisma.lead.count({ where: { ...leadWhere, intencaoApoio: "nao" } }),
       prisma.lead.count({ where: { ...leadWhere, intencaoApoio: "indeciso" } }),
       prisma.apoiador.findMany({
-        orderBy: { totalIndicacoes: "desc" },
-        take: 10,
-        select: { id: true, nome: true, email: true, codigoIndicacao: true, totalIndicacoes: true, createdAt: true },
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+          codigoIndicacao: true,
+          createdAt: true,
+        },
       }),
       prisma.apoiador.count(),
-      prisma.apoiador.aggregate({ _sum: { totalIndicacoes: true } }),
+      prisma.indicacao.count(),
+      prisma.indicacao.groupBy({
+        by: ["apoiadorId"],
+        _count: { _all: true },
+      }),
+      prisma.apoiador.groupBy({
+        by: ["indicadoPorCodigo"],
+        where: { indicadoPorCodigo: { not: null } },
+        _count: { _all: true },
+      }),
     ]);
+
+    const leadsPorApoiador = Object.fromEntries(
+      indicacaoPorApoiador.map((g) => [g.apoiadorId, g._count._all])
+    );
+    const apoiadoresRecrutadosPorCodigo = Object.fromEntries(
+      apoiadoresPorCodigoIndicador.map((g) => [
+        g.indicadoPorCodigo as string,
+        g._count._all,
+      ])
+    );
+
+    function indicacoesDoApoiador(a: { id: string; codigoIndicacao: string }) {
+      return (leadsPorApoiador[a.id] ?? 0) + (apoiadoresRecrutadosPorCodigo[a.codigoIndicacao] ?? 0);
+    }
+
+    const topApoiadores = allApoiadoresRank
+      .map((a) => ({
+        id: a.id,
+        nome: a.nome,
+        email: a.email ?? "",
+        codigoIndicacao: a.codigoIndicacao,
+        totalIndicacoes: indicacoesDoApoiador(a),
+        createdAt: a.createdAt,
+      }))
+      .sort(
+        (x, y) =>
+          y.totalIndicacoes - x.totalIndicacoes ||
+          y.createdAt.getTime() - x.createdAt.getTime()
+      )
+      .slice(0, 10);
+
+    const totalIndicacoesPorApoiadorIndicado = apoiadoresPorCodigoIndicador.reduce(
+      (acc, g) => acc + g._count._all,
+      0
+    );
+    const totalIndicacoes = indicacaoCount + totalIndicacoesPorApoiadorIndicado;
 
     // Resolve the names of who indicated each apoiador
     const refCodigos = [...new Set(apoiadoresIndicados.map((a) => a.indicadoPorCodigo).filter(Boolean) as string[])];
@@ -130,7 +181,6 @@ export async function GET(req: NextRequest) {
     );
 
     const totalLeads = totalLeadsDB + apoiadoresIndicados.length;
-    const totalIndicacoes = indicacoesAggregate._sum.totalIndicacoes ?? 0;
 
     return NextResponse.json({
       totalLeads,

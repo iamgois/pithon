@@ -34,10 +34,21 @@ export async function GET(
       );
     }
 
+    const [leadsIndicados, apoiadoresRecrutados] = await Promise.all([
+      prisma.indicacao.count({ where: { apoiadorId: apoiador.id } }),
+      prisma.apoiador.count({
+        where: { indicadoPorCodigo: apoiador.codigoIndicacao },
+      }),
+    ]);
+    const totalIndicacoes = leadsIndicados + apoiadoresRecrutados;
+
     const baseUrl = req.headers.get("origin") || process.env.NEXTAUTH_URL || "";
     const link = `${baseUrl}/apoiar?ref=${apoiador.codigoIndicacao}`;
 
-    return NextResponse.json({ apoiador, link });
+    return NextResponse.json({
+      apoiador: { ...apoiador, totalIndicacoes },
+      link,
+    });
   } catch (error) {
     console.error("[GET /api/apoiador/[id]]", error);
     return NextResponse.json(
