@@ -15,7 +15,6 @@ export async function GET(req: NextRequest) {
     const dataFim = searchParams.get("dataFim") || undefined;
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const perPage = 100;
-    const skip = (page - 1) * perPage;
 
     const leadWhere: Record<string, unknown> = {};
     if (apoiadorFilter) {
@@ -47,7 +46,7 @@ export async function GET(req: NextRequest) {
 
     const [
       leadsRaw,
-      apoiadoresIndicados,
+      todosApoiadores,
       totalLeadsDB,
       simCount,
       naoCount,
@@ -61,18 +60,17 @@ export async function GET(req: NextRequest) {
       prisma.lead.findMany({
         where: leadWhere,
         orderBy: { createdAt: "desc" },
-        take: perPage,
-        skip,
+        take: 500,
         include: { indicadoPor: { select: { nome: true, codigoIndicacao: true } } },
       }),
+      // Todos os apoiadores (com ou sem indicação)
       prisma.apoiador.findMany({
         where: {
-          indicadoPorCodigo: apoiadorFilter ? apoiadorFilter : { not: null },
+          ...(apoiadorFilter ? { indicadoPorCodigo: apoiadorFilter } : {}),
           ...(apoiadorDateFilter ? { createdAt: apoiadorDateFilter } : {}),
         },
         orderBy: { createdAt: "desc" },
-        take: perPage,
-        skip,
+        take: 500,
         select: {
           id: true,
           nome: true,
@@ -144,8 +142,10 @@ export async function GET(req: NextRequest) {
     );
     const totalIndicacoes = indicacaoCount + totalIndicacoesPorApoiadorIndicado;
 
-    // Resolve the names of who indicated each apoiador
-    const refCodigos = [...new Set(apoiadoresIndicados.map((a) => a.indicadoPorCodigo).filter(Boolean) as string[])];
+    // Resolve o nome de quem indicou cada apoiador (para coluna "Indicado por")
+    const refCodigos = [...new Set(
+      todosApoiadores.map((a) => a.indicadoPorCodigo).filter(Boolean) as string[]
+    )];
     const refApoiadores = refCodigos.length
       ? await prisma.apoiador.findMany({
           where: { codigoIndicacao: { in: refCodigos } },
@@ -154,8 +154,8 @@ export async function GET(req: NextRequest) {
       : [];
     const refMap = Object.fromEntries(refApoiadores.map((a) => [a.codigoIndicacao, a.nome]));
 
-    // Normalize apoiadores-by-referral into the same shape as leads
-    const apoiadorRows = apoiadoresIndicados.map((a) => ({
+    // Normaliza todos os apoiadores para o mesmo shape dos leads
+    const apoiadorRows = todosApoiadores.map((a) => ({
       id: a.id,
       nome: a.nome,
       email: a.email ?? "",
@@ -175,17 +175,18 @@ export async function GET(req: NextRequest) {
       createdAt: l.createdAt.toISOString(),
     }));
 
-    // Merge and sort by createdAt desc
-    const leads = [...leadRows, ...apoiadorRows].sort(
+    // Merge, ordena por data e pagina no cliente
+    const allRows = [...leadRows, ...apoiadorRows].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-
-    const totalLeads = totalLeadsDB + apoiadoresIndicados.length;
+    const totalLeads = totalLeadsDB + todosApoiadores.length;
+    const skip = (page - 1) * perPage;
+    const leads = allRows.slice(skip, skip + perPage);
 
     return NextResponse.json({
       totalLeads,
       totalIndicacoes,
-      intencaoApoio: { sim: simCount + apoiadoresIndicados.length, nao: naoCount, indeciso },
+      intencaoApoio: { sim: simCount + todosApoiadores.length, nao: naoCount, indeciso },
       topApoiadores,
       leads,
       totalApoiadores,
