@@ -36,7 +36,18 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       },
     }),
   ],
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 8 * 60 * 60 }, // 8h hard limit
+  cookies: {
+    sessionToken: {
+      options: {
+        httpOnly: true,
+        sameSite: "lax" as const,
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        // sem maxAge → cookie de sessão: expira ao fechar o navegador
+      },
+    },
+  },
   pages: { signIn: "/login" },
   callbacks: {
     jwt({ token, user }) {
