@@ -400,7 +400,7 @@ export default function AdminLeadsPage() {
             <CardHeader className="pb-2">
               <CardDescription>Total de Leads</CardDescription>
               <CardTitle className="text-3xl">
-                {loading ? "—" : (stats?.totalLeads ?? 0)}
+                {loading ? "—" : (stats?.totalLeads ?? 0) + (stats?.totalApoiadores ?? 0)}
               </CardTitle>
             </CardHeader>
           </Card>
