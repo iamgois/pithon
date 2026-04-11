@@ -46,9 +46,6 @@ export async function GET(req: NextRequest) {
       leadsRaw,
       todosApoiadores,
       totalLeadsDB,
-      simpatizanteCount,
-      recrutaCount,
-      operadorEspecialCount,
       allApoiadoresRank,
       totalApoiadores,
       indicacaoCount,
@@ -61,7 +58,7 @@ export async function GET(req: NextRequest) {
         take: 500,
         include: { indicadoPor: { select: { nome: true, codigoIndicacao: true } } },
       }),
-      // Todos os apoiadores (com ou sem indicação)
+      // Todos os apoiadores (com ou sem indicação) — inclui nivelApoio para contar
       prisma.apoiador.findMany({
         where: {
           ...(apoiadorFilter ? { indicadoPorCodigo: apoiadorFilter } : {}),
@@ -74,15 +71,13 @@ export async function GET(req: NextRequest) {
           nome: true,
           email: true,
           telefone: true,
+          nivelApoio: true,
           indicadoPorCodigo: true,
           codigoIndicacao: true,
           createdAt: true,
         },
       }),
       prisma.lead.count({ where: leadWhere }),
-      prisma.apoiador.count({ where: { nivelApoio: "simpatizante" } }),
-      prisma.apoiador.count({ where: { nivelApoio: "recruta" } }),
-      prisma.apoiador.count({ where: { nivelApoio: "operador_especial" } }),
       prisma.apoiador.findMany({
         select: {
           id: true,
@@ -104,6 +99,11 @@ export async function GET(req: NextRequest) {
         _count: { _all: true },
       }),
     ]);
+
+    // Contagens de nivelApoio a partir dos dados já buscados
+    const simpatizanteCount    = todosApoiadores.filter(a => a.nivelApoio === "simpatizante").length;
+    const recrutaCount         = todosApoiadores.filter(a => a.nivelApoio === "recruta").length;
+    const operadorEspecialCount = todosApoiadores.filter(a => a.nivelApoio === "operador_especial").length;
 
     const leadsPorApoiador = Object.fromEntries(
       indicacaoPorApoiador.map((g) => [g.apoiadorId, g._count._all])
