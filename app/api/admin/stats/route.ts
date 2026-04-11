@@ -60,8 +60,9 @@ export async function GET(req: NextRequest) {
       }),
       prisma.apoiador.findMany({
         where: {
-          NOT: { indicadoPorCodigo: null },
-          ...(apoiadorFilter ? { indicadoPorCodigo: apoiadorFilter } : {}),
+          indicadoPorCodigo: apoiadorFilter
+            ? apoiadorFilter
+            : { not: null },
           ...(apoiadorDateFilter ? { createdAt: apoiadorDateFilter } : {}),
         },
         orderBy: { createdAt: "desc" },
