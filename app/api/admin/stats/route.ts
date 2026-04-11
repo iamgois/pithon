@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
       indeciso,
       topApoiadores,
       totalApoiadores,
+      todosApoiadores,
     ] = await Promise.all([
       prisma.lead.findMany({
         where: leadWhere,
@@ -83,6 +84,10 @@ export async function GET(req: NextRequest) {
         select: { id: true, nome: true, email: true, codigoIndicacao: true, totalIndicacoes: true, createdAt: true },
       }),
       prisma.apoiador.count(),
+      prisma.apoiador.findMany({
+        orderBy: { totalIndicacoes: "desc" },
+        select: { id: true, nome: true, email: true, codigoIndicacao: true, totalIndicacoes: true, createdAt: true },
+      }),
     ]);
 
     // Resolve the names of who indicated each apoiador
@@ -127,6 +132,7 @@ export async function GET(req: NextRequest) {
       totalLeads,
       intencaoApoio: { sim: simCount + apoiadoresIndicados.length, nao: naoCount, indeciso },
       topApoiadores,
+      todosApoiadores,
       leads,
       totalApoiadores,
     });

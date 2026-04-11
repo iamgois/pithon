@@ -24,6 +24,7 @@ interface StatsData {
   totalApoiadores: number;
   intencaoApoio: { sim: number; nao: number; indeciso: number };
   topApoiadores: ApoiadorSummary[];
+  todosApoiadores: ApoiadorSummary[];
 }
 
 export default function AdminDashboardPage() {
@@ -50,7 +51,7 @@ export default function AdminDashboardPage() {
     fetchStats();
   }, [fetchStats]);
 
-  const totalIndicacoes = (stats?.topApoiadores ?? []).reduce(
+  const totalIndicacoes = (stats?.todosApoiadores ?? []).reduce(
     (acc, a) => acc + a.totalIndicacoes,
     0
   );
