@@ -30,18 +30,15 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Apoiadores-by-referral filter mirrors the lead filter on origemCodigo
-    const apoiadorRefWhere: Record<string, unknown> = {
-      indicadoPorCodigo: { not: null },
-    };
-    if (apoiadorFilter) apoiadorRefWhere.indicadoPorCodigo = apoiadorFilter;
+    // Build date filter for apoiadores
+    let apoiadorDateFilter: { gte?: Date; lt?: Date } | undefined;
     if (dataInicio || dataFim) {
-      apoiadorRefWhere.createdAt = {};
-      if (dataInicio) (apoiadorRefWhere.createdAt as Record<string, unknown>).gte = new Date(dataInicio);
+      apoiadorDateFilter = {};
+      if (dataInicio) apoiadorDateFilter.gte = new Date(dataInicio);
       if (dataFim) {
         const fim = new Date(dataFim);
         fim.setDate(fim.getDate() + 1);
-        (apoiadorRefWhere.createdAt as Record<string, unknown>).lt = fim;
+        apoiadorDateFilter.lt = fim;
       }
     }
 
@@ -61,7 +58,11 @@ export async function GET(req: NextRequest) {
         include: { indicadoPor: { select: { nome: true, codigoIndicacao: true } } },
       }),
       prisma.apoiador.findMany({
-        where: apoiadorRefWhere,
+        where: {
+          NOT: { indicadoPorCodigo: null },
+          ...(apoiadorFilter ? { indicadoPorCodigo: apoiadorFilter } : {}),
+          ...(apoiadorDateFilter ? { createdAt: apoiadorDateFilter } : {}),
+        },
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
