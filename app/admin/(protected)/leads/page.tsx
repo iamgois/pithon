@@ -410,6 +410,7 @@ export default function AdminLeadsPage() {
               <CardTitle className="text-3xl text-blue-500">
                 {loading ? "—" : (stats?.nivelApoio?.simpatizante ?? 0)}
               </CardTitle>
+              <p className="text-xs text-muted-foreground">Quero conhecer mais</p>
             </CardHeader>
           </Card>
           <Card>
@@ -418,6 +419,7 @@ export default function AdminLeadsPage() {
               <CardTitle className="text-3xl text-orange-500">
                 {loading ? "—" : (stats?.nivelApoio?.recruta ?? 0)}
               </CardTitle>
+              <p className="text-xs text-muted-foreground">Conte com meu apoio</p>
             </CardHeader>
           </Card>
           <Card>
@@ -426,6 +428,7 @@ export default function AdminLeadsPage() {
               <CardTitle className="text-3xl text-red-500">
                 {loading ? "—" : (stats?.nivelApoio?.operadorEspecial ?? 0)}
               </CardTitle>
+              <p className="text-xs text-muted-foreground">Conte com meu apoio + quero ajudar</p>
             </CardHeader>
           </Card>
         </div>
