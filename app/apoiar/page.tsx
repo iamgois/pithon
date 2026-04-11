@@ -30,7 +30,7 @@ const schema = z
     cidade: z.string().min(2, "Cidade obrigatória"),
     bairro: z.string().min(2, "Bairro obrigatório"),
     profissao: z.string().optional(),
-    dataNascimento: z.string().min(1, "Data de nascimento obrigatória"),
+    dataNascimento: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, "Use o formato DD/MM/AAAA"),
     nivelApoio: z.string().min(1, "Selecione seu nível de apoio"),
   })
   .refine((d) => d.senha === d.confirmarSenha, {
@@ -56,6 +56,13 @@ function formatWhatsApp(value: string) {
   if (digits.length <= 2) return digits;
   if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function formatData(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
@@ -113,10 +120,15 @@ function ApoiarForm() {
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const whatsappValue = watch("whatsapp", "");
+  const dataNascimentoValue = watch("dataNascimento", "");
   const nivelApoioValue = watch("nivelApoio", "");
 
   function handleWhatsAppChange(e: React.ChangeEvent<HTMLInputElement>) {
     setValue("whatsapp", formatWhatsApp(e.target.value), { shouldValidate: true });
+  }
+
+  function handleDataChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setValue("dataNascimento", formatData(e.target.value), { shouldValidate: true });
   }
 
   function toggleAssunto(a: string) {
@@ -359,7 +371,15 @@ function ApoiarForm() {
               </Field>
 
               <Field label="Data de nascimento *" error={errors.dataNascimento?.message}>
-                <Input type="date" {...register("dataNascimento")} aria-invalid={!!errors.dataNascimento} />
+                <Input
+                  type="text"
+                  placeholder="DD/MM/AAAA"
+                  value={dataNascimentoValue}
+                  onChange={handleDataChange}
+                  inputMode="numeric"
+                  maxLength={10}
+                  aria-invalid={!!errors.dataNascimento}
+                />
               </Field>
 
               <div className="flex flex-col gap-2">
