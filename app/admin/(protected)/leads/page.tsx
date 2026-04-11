@@ -430,99 +430,6 @@ export default function AdminLeadsPage() {
           </Card>
         </div>
 
-        {/* ── LEADS TABLE ── */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-base">Lista de Leads</CardTitle>
-              <CardDescription>
-                {loading ? "Carregando..." : `${stats?.totalLeads ?? 0} lead(s) no total`}
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  stats &&
-                  setModal({ title: "Lista de Leads", lista: stats.leads })
-                }
-                disabled={!stats || stats.leads.length === 0}
-              >
-                Ver lista completa
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => stats && downloadLeadsCSV(stats.leads)}
-                disabled={!stats || stats.leads.length === 0}
-              >
-                Exportar CSV
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="py-8 text-center text-muted-foreground text-sm">Carregando...</div>
-            ) : !stats || stats.leads.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground text-sm">
-                Nenhum lead cadastrado ainda.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Intenção</TableHead>
-                      <TableHead>Indicado por</TableHead>
-                      <TableHead className="text-right">Data</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {leadsSlice.map((lead) => (
-                      <TableRow key={lead.id}>
-                        <TableCell className="font-medium">{lead.nome}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{lead.email}</TableCell>
-                        <TableCell>
-                          <Badge variant={getApoioBadgeVariant(lead.intencaoApoio)}>
-                            {getApoioLabel(lead.intencaoApoio)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {lead.indicadoPor ? (
-                            <a
-                              href={`${origin}/dashboard/${lead.indicadoPor.codigoIndicacao}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-500 hover:underline"
-                            >
-                              {lead.indicadoPor.nome}
-                            </a>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right text-muted-foreground text-sm">
-                          {new Date(lead.createdAt).toLocaleDateString("pt-BR")}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-            <Pagination
-              page={leadsPage}
-              total={stats?.totalLeads ?? 0}
-              onPrev={() => setLeadsPage((p) => p - 1)}
-              onNext={() => setLeadsPage((p) => p + 1)}
-              loading={loading}
-            />
-          </CardContent>
-        </Card>
-
         {/* ── APOIADORES TABLE ── */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -622,6 +529,99 @@ export default function AdminLeadsPage() {
               total={stats?.totalApoiadores ?? 0}
               onPrev={() => setApoiadoresPage((p) => p - 1)}
               onNext={() => setApoiadoresPage((p) => p + 1)}
+              loading={loading}
+            />
+          </CardContent>
+        </Card>
+
+        {/* ── LEADS TABLE ── */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Lista de Leads</CardTitle>
+              <CardDescription>
+                {loading ? "Carregando..." : `${stats?.totalLeads ?? 0} lead(s) no total`}
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  stats &&
+                  setModal({ title: "Lista de Leads", lista: stats.leads })
+                }
+                disabled={!stats || stats.leads.length === 0}
+              >
+                Ver lista completa
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => stats && downloadLeadsCSV(stats.leads)}
+                disabled={!stats || stats.leads.length === 0}
+              >
+                Exportar CSV
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="py-8 text-center text-muted-foreground text-sm">Carregando...</div>
+            ) : !stats || stats.leads.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground text-sm">
+                Nenhum lead cadastrado ainda.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Intenção</TableHead>
+                      <TableHead>Indicado por</TableHead>
+                      <TableHead className="text-right">Data</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {leadsSlice.map((lead) => (
+                      <TableRow key={lead.id}>
+                        <TableCell className="font-medium">{lead.nome}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{lead.email}</TableCell>
+                        <TableCell>
+                          <Badge variant={getApoioBadgeVariant(lead.intencaoApoio)}>
+                            {getApoioLabel(lead.intencaoApoio)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {lead.indicadoPor ? (
+                            <a
+                              href={`${origin}/dashboard/${lead.indicadoPor.codigoIndicacao}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:underline"
+                            >
+                              {lead.indicadoPor.nome}
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground text-sm">
+                          {new Date(lead.createdAt).toLocaleDateString("pt-BR")}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+            <Pagination
+              page={leadsPage}
+              total={stats?.totalLeads ?? 0}
+              onPrev={() => setLeadsPage((p) => p - 1)}
+              onNext={() => setLeadsPage((p) => p + 1)}
               loading={loading}
             />
           </CardContent>
