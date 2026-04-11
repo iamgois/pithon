@@ -47,7 +47,7 @@ interface ApoiadorRow {
 interface StatsData {
   totalLeads: number;
   totalApoiadores: number;
-  intencaoApoio: { sim: number; nao: number; indeciso: number };
+  nivelApoio: { simpatizante: number; recruta: number; operadorEspecial: number };
   leads: LeadRow[];
   apoiadores: ApoiadorRow[];
 }
@@ -406,25 +406,25 @@ export default function AdminLeadsPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Tem o apoio</CardDescription>
-              <CardTitle className="text-3xl text-green-500">
-                {loading ? "—" : (stats?.intencaoApoio.sim ?? 0)}
+              <CardDescription>Simpatizante</CardDescription>
+              <CardTitle className="text-3xl text-blue-500">
+                {loading ? "—" : (stats?.nivelApoio.simpatizante ?? 0)}
               </CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Não tem o apoio</CardDescription>
+              <CardDescription>Recruta</CardDescription>
+              <CardTitle className="text-3xl text-orange-500">
+                {loading ? "—" : (stats?.nivelApoio.recruta ?? 0)}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Operador Especial</CardDescription>
               <CardTitle className="text-3xl text-red-500">
-                {loading ? "—" : (stats?.intencaoApoio.nao ?? 0)}
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Indeciso</CardDescription>
-              <CardTitle className="text-3xl text-amber-500">
-                {loading ? "—" : (stats?.intencaoApoio.indeciso ?? 0)}
+                {loading ? "—" : (stats?.nivelApoio.operadorEspecial ?? 0)}
               </CardTitle>
             </CardHeader>
           </Card>
