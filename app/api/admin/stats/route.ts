@@ -166,6 +166,7 @@ export async function GET(req: NextRequest) {
       nome: a.nome,
       email: a.email ?? "",
       telefone: a.telefone ?? null,
+      nivelApoio: a.nivelApoio ?? null,
       codigoIndicacao: a.codigoIndicacao,
       origemCodigo: a.indicadoPorCodigo ?? null,
       intencaoApoio: "sim",

@@ -39,6 +39,7 @@ interface ApoiadorRow {
   codigoIndicacao: string;
   origemCodigo: string | null;
   intencaoApoio: string;
+  nivelApoio: string | null;
   tipo: "apoiador";
   createdAt: string;
   indicadoPor: { nome: string; codigoIndicacao: string } | null;
@@ -336,6 +337,9 @@ export default function AdminLeadsPage() {
   const [leadsPage, setLeadsPage] = useState(1);
   const [apoiadoresPage, setApoiadoresPage] = useState(1);
 
+  // Filter for apoiadores nivelApoio
+  const [nivelFiltro, setNivelFiltro] = useState<string | null>(null);
+
   // Modal state
   const [modal, setModal] = useState<{ title: string; lista: AnyRow[] } | null>(null);
 
@@ -364,12 +368,16 @@ export default function AdminLeadsPage() {
   const leadsSlice = stats
     ? stats.leads.slice((leadsPage - 1) * PER_PAGE, leadsPage * PER_PAGE)
     : [];
-  const apoiadoresSlice = stats
-    ? stats.apoiadores.slice(
-        (apoiadoresPage - 1) * PER_PAGE,
-        apoiadoresPage * PER_PAGE
-      )
+
+  const apoiadoresFiltrados = stats
+    ? nivelFiltro
+      ? stats.apoiadores.filter((a) => a.nivelApoio === nivelFiltro)
+      : stats.apoiadores
     : [];
+  const apoiadoresSlice = apoiadoresFiltrados.slice(
+    (apoiadoresPage - 1) * PER_PAGE,
+    apoiadoresPage * PER_PAGE
+  );
 
   return (
     <>
@@ -435,43 +443,67 @@ export default function AdminLeadsPage() {
 
         {/* ── APOIADORES TABLE ── */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-base">Lista de Apoiadores</CardTitle>
-              <CardDescription>
-                {loading
-                  ? "Carregando..."
-                  : `${stats?.totalApoiadores ?? 0} apoiador(es) com link de indicação`}
-              </CardDescription>
+          <CardHeader className="flex flex-col gap-3">
+            <div className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-base">Lista de Apoiadores</CardTitle>
+                <CardDescription>
+                  {loading
+                    ? "Carregando..."
+                    : `${apoiadoresFiltrados.length} apoiador(es)${nivelFiltro ? " (filtrado)" : " com link de indicação"}`}
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    stats &&
+                    setModal({ title: "Lista de Apoiadores", lista: apoiadoresFiltrados })
+                  }
+                  disabled={!stats || apoiadoresFiltrados.length === 0}
+                >
+                  Ver lista completa
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => downloadApoiadoresCSV(apoiadoresFiltrados as ApoiadorRow[])}
+                  disabled={apoiadoresFiltrados.length === 0}
+                >
+                  Exportar CSV
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  stats &&
-                  setModal({ title: "Lista de Apoiadores", lista: stats.apoiadores })
-                }
-                disabled={!stats || stats.apoiadores.length === 0}
-              >
-                Ver lista completa
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => stats && downloadApoiadoresCSV(stats.apoiadores)}
-                disabled={!stats || stats.apoiadores.length === 0}
-              >
-                Exportar CSV
-              </Button>
+            {/* Filtros de nível */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: null, label: "Todos" },
+                { value: "simpatizante", label: "Simpatizante", color: "text-blue-600 border-blue-300 bg-blue-50 dark:bg-blue-950 dark:border-blue-800" },
+                { value: "recruta", label: "Recruta", color: "text-orange-600 border-orange-300 bg-orange-50 dark:bg-orange-950 dark:border-orange-800" },
+                { value: "operador_especial", label: "Operador Especial", color: "text-red-600 border-red-300 bg-red-50 dark:bg-red-950 dark:border-red-800" },
+              ].map((opt) => (
+                <button
+                  key={String(opt.value)}
+                  onClick={() => { setNivelFiltro(opt.value); setApoiadoresPage(1); }}
+                  className={[
+                    "px-3 py-1 rounded-full text-xs font-medium border transition-colors",
+                    nivelFiltro === opt.value
+                      ? opt.color ?? "bg-foreground text-background border-foreground"
+                      : "border-border text-muted-foreground hover:border-foreground hover:text-foreground",
+                  ].join(" ")}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
               <div className="py-8 text-center text-muted-foreground text-sm">Carregando...</div>
-            ) : !stats || stats.apoiadores.length === 0 ? (
+            ) : apoiadoresFiltrados.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground text-sm">
-                Nenhum apoiador cadastrado ainda.
+                Nenhum apoiador encontrado{nivelFiltro ? " para este filtro" : ""}.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -480,6 +512,7 @@ export default function AdminLeadsPage() {
                     <TableRow>
                       <TableHead>Nome</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Nível</TableHead>
                       <TableHead>Código</TableHead>
                       <TableHead>Indicado por</TableHead>
                       <TableHead className="text-right">Data</TableHead>
@@ -499,6 +532,12 @@ export default function AdminLeadsPage() {
                           </a>
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm">{ap.email}</TableCell>
+                        <TableCell>
+                          {ap.nivelApoio === "simpatizante" && <Badge className="bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-950 dark:text-blue-300">Simpatizante</Badge>}
+                          {ap.nivelApoio === "recruta" && <Badge className="bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-950 dark:text-orange-300">Recruta</Badge>}
+                          {ap.nivelApoio === "operador_especial" && <Badge className="bg-red-100 text-red-700 border-red-300 dark:bg-red-950 dark:text-red-300">Op. Especial</Badge>}
+                          {!ap.nivelApoio && <span className="text-muted-foreground text-xs">—</span>}
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="font-mono text-xs">
                             {ap.codigoIndicacao}
@@ -529,7 +568,7 @@ export default function AdminLeadsPage() {
             )}
             <Pagination
               page={apoiadoresPage}
-              total={stats?.totalApoiadores ?? 0}
+              total={apoiadoresFiltrados.length}
               onPrev={() => setApoiadoresPage((p) => p - 1)}
               onNext={() => setApoiadoresPage((p) => p + 1)}
               loading={loading}
