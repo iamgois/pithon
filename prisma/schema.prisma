@@ -22,6 +22,7 @@ model Apoiador {
   nivelApoio        String?
   canalComunicacao  String?
   codigoIndicacao   String   @unique
+  indicadoPorCodigo String?
   totalIndicacoes   Int      @default(0)
   createdAt         DateTime @default(now())
   indicacoes        Indicacao[]

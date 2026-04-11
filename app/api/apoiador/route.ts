@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
       hobbies,
       nivelApoio,
       canalComunicacao,
+      indicadoPorCodigo,
     } = body;
 
     if (!nome) {
@@ -51,6 +52,14 @@ export async function POST(req: NextRequest) {
       exists = await prisma.apoiador.findUnique({ where: { codigoIndicacao } });
     }
 
+    // Validate referral code if provided
+    let refApoiador = null;
+    if (indicadoPorCodigo) {
+      refApoiador = await prisma.apoiador.findUnique({
+        where: { codigoIndicacao: indicadoPorCodigo },
+      });
+    }
+
     // Hash password
     const senhaHash = await bcrypt.hash(senha, 10);
 
@@ -69,8 +78,17 @@ export async function POST(req: NextRequest) {
         nivelApoio: nivelApoio || null,
         canalComunicacao: canalComunicacao || null,
         codigoIndicacao,
+        indicadoPorCodigo: refApoiador ? indicadoPorCodigo : null,
       },
     });
+
+    // Increment referring apoiador's counter
+    if (refApoiador) {
+      await prisma.apoiador.update({
+        where: { id: refApoiador.id },
+        data: { totalIndicacoes: { increment: 1 } },
+      });
+    }
 
     const baseUrl = req.headers.get("origin") || process.env.NEXTAUTH_URL || "";
     const link = `${baseUrl}/apoiar?ref=${codigoIndicacao}`;
