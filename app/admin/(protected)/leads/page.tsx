@@ -26,6 +26,7 @@ interface LeadRow {
   telefone: string | null;
   origemCodigo: string | null;
   intencaoApoio: string;
+  tipo: "lead" | "apoiador";
   createdAt: string;
   indicadoPor: { nome: string; codigoIndicacao: string } | null;
 }
@@ -60,6 +61,7 @@ function downloadCSV(leads: LeadRow[]) {
     "Nome",
     "Email",
     "Telefone",
+    "Tipo",
     "Intenção de Apoio",
     "Indicado por (nome)",
     "Código de origem",
@@ -69,6 +71,7 @@ function downloadCSV(leads: LeadRow[]) {
     esc(l.nome),
     esc(l.email),
     esc(l.telefone),
+    l.tipo === "apoiador" ? "Apoiador" : "Lead",
     getApoioLabel(l.intencaoApoio),
     esc(l.indicadoPor?.nome),
     esc(l.origemCodigo),
@@ -194,6 +197,7 @@ export default function AdminLeadsPage() {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Tipo</TableHead>
                     <TableHead>Intenção</TableHead>
                     <TableHead>Indicado por</TableHead>
                     <TableHead>Data</TableHead>
@@ -205,6 +209,11 @@ export default function AdminLeadsPage() {
                       <TableCell className="font-medium">{lead.nome}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {lead.email}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={lead.tipo === "apoiador" ? "default" : "secondary"}>
+                          {lead.tipo === "apoiador" ? "Apoiador" : "Lead"}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant={getApoioBadgeVariant(lead.intencaoApoio)}>

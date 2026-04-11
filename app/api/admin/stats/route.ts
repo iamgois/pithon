@@ -30,15 +30,48 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Apoiadores-by-referral filter mirrors the lead filter on origemCodigo
+    const apoiadorRefWhere: Record<string, unknown> = {
+      indicadoPorCodigo: { not: null },
+    };
+    if (apoiadorFilter) apoiadorRefWhere.indicadoPorCodigo = apoiadorFilter;
+    if (dataInicio || dataFim) {
+      apoiadorRefWhere.createdAt = {};
+      if (dataInicio) (apoiadorRefWhere.createdAt as Record<string, unknown>).gte = new Date(dataInicio);
+      if (dataFim) {
+        const fim = new Date(dataFim);
+        fim.setDate(fim.getDate() + 1);
+        (apoiadorRefWhere.createdAt as Record<string, unknown>).lt = fim;
+      }
+    }
+
     const [
-      totalLeads,
+      leadsRaw,
+      apoiadoresIndicados,
+      totalLeadsDB,
       simCount,
       naoCount,
       indeciso,
       topApoiadores,
-      leads,
       totalApoiadores,
     ] = await Promise.all([
+      prisma.lead.findMany({
+        where: leadWhere,
+        orderBy: { createdAt: "desc" },
+        include: { indicadoPor: { select: { nome: true, codigoIndicacao: true } } },
+      }),
+      prisma.apoiador.findMany({
+        where: apoiadorRefWhere,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+          telefone: true,
+          indicadoPorCodigo: true,
+          createdAt: true,
+        },
+      }),
       prisma.lead.count({ where: leadWhere }),
       prisma.lead.count({ where: { ...leadWhere, intencaoApoio: "sim" } }),
       prisma.lead.count({ where: { ...leadWhere, intencaoApoio: "nao" } }),
@@ -46,30 +79,52 @@ export async function GET(req: NextRequest) {
       prisma.apoiador.findMany({
         orderBy: { totalIndicacoes: "desc" },
         take: 10,
-        select: {
-          id: true,
-          nome: true,
-          email: true,
-          codigoIndicacao: true,
-          totalIndicacoes: true,
-          createdAt: true,
-        },
-      }),
-      prisma.lead.findMany({
-        where: leadWhere,
-        orderBy: { createdAt: "desc" },
-        include: {
-          indicadoPor: {
-            select: { nome: true, codigoIndicacao: true },
-          },
-        },
+        select: { id: true, nome: true, email: true, codigoIndicacao: true, totalIndicacoes: true, createdAt: true },
       }),
       prisma.apoiador.count(),
     ]);
 
+    // Resolve the names of who indicated each apoiador
+    const refCodigos = [...new Set(apoiadoresIndicados.map((a) => a.indicadoPorCodigo).filter(Boolean) as string[])];
+    const refApoiadores = refCodigos.length
+      ? await prisma.apoiador.findMany({
+          where: { codigoIndicacao: { in: refCodigos } },
+          select: { nome: true, codigoIndicacao: true },
+        })
+      : [];
+    const refMap = Object.fromEntries(refApoiadores.map((a) => [a.codigoIndicacao, a.nome]));
+
+    // Normalize apoiadores-by-referral into the same shape as leads
+    const apoiadorRows = apoiadoresIndicados.map((a) => ({
+      id: a.id,
+      nome: a.nome,
+      email: a.email ?? "",
+      telefone: a.telefone ?? null,
+      origemCodigo: a.indicadoPorCodigo ?? null,
+      intencaoApoio: "sim",
+      tipo: "apoiador" as const,
+      createdAt: a.createdAt.toISOString(),
+      indicadoPor: a.indicadoPorCodigo
+        ? { nome: refMap[a.indicadoPorCodigo] ?? a.indicadoPorCodigo, codigoIndicacao: a.indicadoPorCodigo }
+        : null,
+    }));
+
+    const leadRows = leadsRaw.map((l) => ({
+      ...l,
+      tipo: "lead" as const,
+      createdAt: l.createdAt.toISOString(),
+    }));
+
+    // Merge and sort by createdAt desc
+    const leads = [...leadRows, ...apoiadorRows].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const totalLeads = totalLeadsDB + apoiadoresIndicados.length;
+
     return NextResponse.json({
       totalLeads,
-      intencaoApoio: { sim: simCount, nao: naoCount, indeciso },
+      intencaoApoio: { sim: simCount + apoiadoresIndicados.length, nao: naoCount, indeciso },
       topApoiadores,
       leads,
       totalApoiadores,
