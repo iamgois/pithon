@@ -23,6 +23,8 @@ interface LeadRow {
   id: string;
   nome: string;
   email: string;
+  telefone: string | null;
+  origemCodigo: string | null;
   intencaoApoio: string;
   createdAt: string;
   indicadoPor: { nome: string; codigoIndicacao: string } | null;
@@ -48,13 +50,28 @@ function getApoioLabel(voto: string): string {
   return "Indeciso";
 }
 
+function esc(value: string | null | undefined): string {
+  if (!value) return "";
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
 function downloadCSV(leads: LeadRow[]) {
-  const headers = ["Nome", "Email", "Intenção de Apoio", "Indicado por", "Data"];
+  const headers = [
+    "Nome",
+    "Email",
+    "Telefone",
+    "Intenção de Apoio",
+    "Indicado por (nome)",
+    "Código de origem",
+    "Data de cadastro",
+  ];
   const rows = leads.map((l) => [
-    `"${l.nome}"`,
-    `"${l.email}"`,
+    esc(l.nome),
+    esc(l.email),
+    esc(l.telefone),
     getApoioLabel(l.intencaoApoio),
-    l.indicadoPor ? `"${l.indicadoPor.nome}"` : "",
+    esc(l.indicadoPor?.nome),
+    esc(l.origemCodigo),
     new Date(l.createdAt).toLocaleDateString("pt-BR"),
   ]);
   const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
