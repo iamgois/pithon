@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -113,6 +114,51 @@ function downloadApoiadoresCSV(apoiadores: ApoiadorRow[]) {
   a.download = `apoiadores-pithon-${new Date().toISOString().split("T")[0]}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+/* ── Skeleton: summary cards (4 cols) ── */
+function SummaryCardsSkeleton() {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Card key={i}>
+          <CardHeader className="pb-2">
+            <Skeleton className="h-3 w-28 mb-3" />
+            <Skeleton className="h-9 w-16" />
+            <Skeleton className="h-3 w-36 mt-2" />
+          </CardHeader>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+/* ── Skeleton: table rows ── */
+function TableSkeleton({ cols = 5, rows = 10 }: { cols?: number; rows?: number }) {
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {Array.from({ length: cols }).map((_, i) => (
+              <TableHead key={i}><Skeleton className="h-4 w-20" /></TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: rows }).map((_, r) => (
+            <TableRow key={r}>
+              {Array.from({ length: cols }).map((_, c) => (
+                <TableCell key={c}>
+                  <Skeleton className={`h-4 ${c === 0 ? "w-36" : c === 1 ? "w-48" : "w-20"}`} />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
 }
 
 function Pagination({
@@ -403,43 +449,45 @@ export default function AdminLeadsPage() {
         )}
 
         {/* Summary cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Total de Leads</CardDescription>
-              <CardTitle className="text-3xl">
-                {loading ? "—" : (stats?.totalLeads ?? 0) + (stats?.totalApoiadores ?? 0)}
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Simpatizante</CardDescription>
-              <CardTitle className="text-3xl text-blue-500">
-                {loading ? "—" : (stats?.nivelApoio?.simpatizante ?? 0)}
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">Quero conhecer mais</p>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Recruta</CardDescription>
-              <CardTitle className="text-3xl text-orange-500">
-                {loading ? "—" : (stats?.nivelApoio?.recruta ?? 0)}
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">Conte com meu apoio</p>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Operador Especial</CardDescription>
-              <CardTitle className="text-3xl text-red-500">
-                {loading ? "—" : (stats?.nivelApoio?.operadorEspecial ?? 0)}
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">Conte com meu apoio + quero ajudar</p>
-            </CardHeader>
-          </Card>
-        </div>
+        {loading ? <SummaryCardsSkeleton /> : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Total de Leads</CardDescription>
+                <CardTitle className="text-3xl">
+                  {(stats?.totalLeads ?? 0) + (stats?.totalApoiadores ?? 0)}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Simpatizante</CardDescription>
+                <CardTitle className="text-3xl text-blue-500">
+                  {stats?.nivelApoio?.simpatizante ?? 0}
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">Quero conhecer mais</p>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Recruta</CardDescription>
+                <CardTitle className="text-3xl text-orange-500">
+                  {stats?.nivelApoio?.recruta ?? 0}
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">Conte com meu apoio</p>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Operador Especial</CardDescription>
+                <CardTitle className="text-3xl text-red-500">
+                  {stats?.nivelApoio?.operadorEspecial ?? 0}
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">Conte com meu apoio + quero ajudar</p>
+              </CardHeader>
+            </Card>
+          </div>
+        )}
 
         {/* ── APOIADORES TABLE ── */}
         <Card>
@@ -500,7 +548,15 @@ export default function AdminLeadsPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="py-8 text-center text-muted-foreground text-sm">Carregando...</div>
+              <>
+                {/* Filter pills skeleton */}
+                <div className="flex gap-2 px-6 pb-4">
+                  {[60, 90, 72, 120].map((w) => (
+                    <Skeleton key={w} className={`h-6 w-${w} rounded-full`} style={{ width: w }} />
+                  ))}
+                </div>
+                <TableSkeleton cols={6} rows={10} />
+              </>
             ) : apoiadoresFiltrados.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground text-sm">
                 Nenhum apoiador encontrado{nivelFiltro ? " para este filtro" : ""}.
@@ -609,7 +665,7 @@ export default function AdminLeadsPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="py-8 text-center text-muted-foreground text-sm">Carregando...</div>
+              <TableSkeleton cols={5} rows={10} />
             ) : !stats || stats.leads.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground text-sm">
                 Nenhum lead cadastrado ainda.
