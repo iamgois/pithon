@@ -119,7 +119,7 @@ export async function GET(req: NextRequest) {
       return (leadsPorApoiador[a.id] ?? 0) + (apoiadoresRecrutadosPorCodigo[a.codigoIndicacao] ?? 0);
     }
 
-    const topApoiadores = allApoiadoresRank
+    const rankingApoiadores = allApoiadoresRank
       .map((a) => ({
         id: a.id,
         nome: a.nome,
@@ -132,8 +132,8 @@ export async function GET(req: NextRequest) {
         (x, y) =>
           y.totalIndicacoes - x.totalIndicacoes ||
           y.createdAt.getTime() - x.createdAt.getTime()
-      )
-      .slice(0, 10);
+      );
+    const topApoiadores = rankingApoiadores.slice(0, 10);
 
     const totalIndicacoesPorApoiadorIndicado = apoiadoresPorCodigoIndicador.reduce(
       (acc, g) => acc + g._count._all,
@@ -183,6 +183,7 @@ export async function GET(req: NextRequest) {
       totalIndicacoes,
       nivelApoio: { simpatizante: simpatizanteCount, recruta: recrutaCount, operadorEspecial: operadorEspecialCount },
       topApoiadores,
+      rankingApoiadores,
       leads,
       apoiadores,
     });
