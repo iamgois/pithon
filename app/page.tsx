@@ -37,7 +37,7 @@ export default function Home() {
             className={cn(buttonVariants({ size: "lg" }), "w-full")}
           >
             <HandRaisedIcon data-icon="inline-start" className="size-4" />
-            Quero apoiar
+            Me identifico com o projeto
           </Link>
 
           <Link
