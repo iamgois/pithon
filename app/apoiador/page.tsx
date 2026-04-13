@@ -118,7 +118,7 @@ function ToggleChip({
   );
 }
 
-const VIDEO_URL = "https://video.wixstatic.com/video/21a826_4c882bfc41044de4a738abc66b88e1c0/1080p/mp4/file.mp4";
+const VIDEO_URL = "https://video.wixstatic.com/video/21a826_4641ea892f2e4f378cb3651433d81cf0/1080p/mp4/file.mp4";
 
 export default function Home() {
   const [submitted, setSubmitted] = useState(false);
